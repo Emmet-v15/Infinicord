@@ -12,7 +12,7 @@ import "./vesktopProtocol";
 import { app, BrowserWindow, nativeTheme } from "electron";
 
 import { CommandLine } from "./cli";
-import { DATA_DIR } from "./constants";
+import { DATA_DIR, VENCORD_SETTINGS_DIR } from "./constants";
 import { createFirstLaunchTour } from "./firstLaunch";
 import { createWindows } from "./mainWindow";
 import { registerMediaPermissionsHandler } from "./mediaPermissions";
@@ -24,6 +24,7 @@ import { isDeckGameMode } from "./utils/steamOS";
 console.log("Infinicord v" + app.getVersion());
 
 process.env.INFINICORD_USER_DATA_DIR = DATA_DIR;
+process.env.VENCORD_SETTINGS_DIR = VENCORD_SETTINGS_DIR;
 
 const isLinux = process.platform === "linux";
 
