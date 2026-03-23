@@ -30,4 +30,15 @@ grep -rl "@infinicord/types" --include="*.ts" --include="*.tsx" --include="*.mts
   --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git \
   | xargs sed -i 's/@infinicord\/types/@equicord\/types/g'
 
+# Restore Equicord/Equicord release URL (plugin asar download — not ours to rename)
+grep -rl "Infinicord/Infinicord/releases" --include="*.ts" --include="*.mts" . \
+  --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git \
+  | xargs sed -i 's|Infinicord/Infinicord/releases/latest/download/infinicord.asar|Equicord/Equicord/releases/latest/download/equicord.asar|g'
+
+# Restore equicord/main.js install validation path
+sed -i 's|infinicord/main\.js|equicord/main.js|g' src/main/utils/vencordLoader.ts
+
+# Fix USER_AGENT to point to actual repo
+sed -i 's|github\.com/Infinicord/Infinicord|github.com/Emmet-v15/Infinicord|g' src/main/constants.ts
+
 echo "Done."
