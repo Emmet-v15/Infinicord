@@ -245,11 +245,13 @@ function checkForSecondInstance() {
     setupSecondInstanceHandler();
 }
 
+export let baseUserDataPath: string;
+
 function setupProfile() {
+    baseUserDataPath = app.getPath("userData");
     const { profile } = CommandLine.values;
     if (profile) {
-        const currentUserData = app.getPath("userData");
-        app.setPath("userData", `${currentUserData}-${profile}`);
+        app.setPath("userData", `${baseUserDataPath}-${profile}`);
     }
 }
 

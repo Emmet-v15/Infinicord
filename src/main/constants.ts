@@ -8,7 +8,7 @@ import { app } from "electron";
 import { existsSync, mkdirSync } from "fs";
 import { dirname, join } from "path";
 
-import { CommandLine } from "./cli";
+import { baseUserDataPath, CommandLine } from "./cli";
 
 const infinicordDir = dirname(process.execPath);
 
@@ -17,12 +17,14 @@ export const PORTABLE =
     !process.execPath.toLowerCase().endsWith("electron.exe") &&
     !existsSync(join(infinicordDir, "Uninstall Infinicord.exe"));
 
+// Shared across all profiles (settings, themes, etc.)
 export const DATA_DIR =
-    process.env.INFINICORD_USER_DATA_DIR || (PORTABLE ? join(infinicordDir, "Data") : join(app.getPath("userData")));
+    process.env.INFINICORD_USER_DATA_DIR || (PORTABLE ? join(infinicordDir, "Data") : baseUserDataPath);
 
 mkdirSync(DATA_DIR, { recursive: true });
 
-export const SESSION_DATA_DIR = join(DATA_DIR, "sessionData");
+// Profile-specific: app.getPath("userData") is suffixed with profile name if --profile is set
+export const SESSION_DATA_DIR = join(app.getPath("userData"), "sessionData");
 app.setPath("sessionData", SESSION_DATA_DIR);
 
 export const VENCORD_SETTINGS_DIR = join(DATA_DIR, "settings");
