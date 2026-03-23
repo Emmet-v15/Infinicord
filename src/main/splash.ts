@@ -74,7 +74,7 @@ export async function createSplashWindow(startMinimized = false) {
             }
 
             img {
-                animation: spin 2s linear infinite;
+                animation: spin 0.8s linear infinite;
             }
         `);
     }
