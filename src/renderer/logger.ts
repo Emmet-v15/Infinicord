@@ -6,4 +6,4 @@
 
 import { Logger } from "@equicord/types/utils";
 
-export const VesktopLogger = new Logger("Equibop", "#d3869b");
+export const VesktopLogger = new Logger("Infinibop", "#d3869b");

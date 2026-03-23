@@ -38,7 +38,7 @@ const NodeCommonOpts: BuildOptions = {
     },
     define: {
         IS_DEV: JSON.stringify(isDev),
-        EQUIBOP_GIT_HASH: JSON.stringify(gitHash)
+        INFINIBOP_GIT_HASH: JSON.stringify(gitHash)
     }
 };
 
@@ -111,7 +111,7 @@ await Promise.all([
     }),
     createContext({
         ...CommonOpts,
-        globalName: "Equibop",
+        globalName: "Infinibop",
         entryPoints: ["src/renderer/index.ts"],
         outfile: "dist/js/renderer.js",
         format: "iife",

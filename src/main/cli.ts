@@ -63,6 +63,12 @@ const options = {
         type: "boolean",
         short: "r",
         description: "Re-download Equicord and restart"
+    },
+    profile: {
+        type: "string",
+        short: "p",
+        description: "Use a named profile to run multiple instances simultaneously",
+        argumentName: "name"
     }
 } satisfies Record<string, Option>;
 
@@ -81,7 +87,7 @@ const extraOptions = {
     "ozone-platform": {
         hidden: process.platform !== "linux",
         type: "string",
-        description: "Whether to run Equibop in Wayland or X11 (XWayland)",
+        description: "Whether to run Infinibop in Wayland or X11 (XWayland)",
         options: ["x11", "wayland"]
     }
 } satisfies Record<string, Option>;
@@ -119,13 +125,13 @@ export function checkCommandLineForHelpOrVersion() {
     const { help, version } = CommandLine.values;
 
     if (version) {
-        console.log(`Equibop v${app.getVersion()}`);
+        console.log(`Infinibop v${app.getVersion()}`);
         app.exit(0);
     }
 
     if (help) {
         const base = stripIndent`
-            Equibop v${app.getVersion()}
+            Infinibop v${app.getVersion()}
 
             Usage: ${basename(process.execPath)} [options] [url]
 
@@ -189,7 +195,7 @@ function checkCommandLineForToggleCommands() {
         app.exit(0);
     }
 
-    console.error("Equibop is not running. Toggle commands require a running instance.");
+    console.error("Infinibop is not running. Toggle commands require a running instance.");
     app.exit(1);
 }
 
@@ -228,10 +234,10 @@ function checkForSecondInstance() {
 
     if (!app.requestSingleInstanceLock({ IS_DEV })) {
         if (IS_DEV) {
-            console.log("Equibop is already running. Quitting previous instance...");
+            console.log("Infinibop is already running. Quitting previous instance...");
             return;
         } else {
-            console.log("Equibop is already running. Quitting...");
+            console.log("Infinibop is already running. Quitting...");
             app.exit(0);
         }
     }
@@ -239,5 +245,14 @@ function checkForSecondInstance() {
     setupSecondInstanceHandler();
 }
 
+function setupProfile() {
+    const { profile } = CommandLine.values;
+    if (profile) {
+        const currentUserData = app.getPath("userData");
+        app.setPath("userData", `${currentUserData}-${profile}`);
+    }
+}
+
 checkCommandLineForHelpOrVersion();
+setupProfile();
 checkForSecondInstance();

@@ -29,7 +29,7 @@ function openDeveloperOptionsModal(settings: Settings) {
         <ModalRoot {...props} size={ModalSize.MEDIUM}>
             <ModalHeader>
                 <BaseText size="lg" weight="semibold" tag="h3" style={{ flexGrow: 1 }}>
-                    Equibop Developer Options
+                    Infinibop Developer Options
                 </BaseText>
                 <ModalCloseButton onClick={props.onClose} />
             </ModalHeader>
@@ -86,7 +86,7 @@ const EquicordLocationPicker: SettingsComponent = ({ settings }) => {
                                 break;
                             case "ok":
                                 Toasts.show({
-                                    message: "Equicord install changed. Fully restart Equibop to apply.",
+                                    message: "Equicord install changed. Fully restart Infinibop to apply.",
                                     id: Toasts.genId(),
                                     type: Toasts.Type.SUCCESS
                                 });

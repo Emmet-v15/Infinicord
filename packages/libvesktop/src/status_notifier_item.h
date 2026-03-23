@@ -44,7 +44,7 @@ private:
     std::string menu_object_path = "/MenuBar";
     std::string current_status = "Active";
     std::string current_icon_path;
-    std::string current_title = "Equibop";
+    std::string current_title = "Infinibop";
     std::vector<uint8_t> current_icon_pixmap;
     std::vector<MenuItem> menu_items;
     uint32_t menu_revision = 1;

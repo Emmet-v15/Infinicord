@@ -11,6 +11,7 @@ import "./vesktopProtocol";
 
 import { app, BrowserWindow, nativeTheme } from "electron";
 
+import { CommandLine } from "./cli";
 import { DATA_DIR } from "./constants";
 import { createFirstLaunchTour } from "./firstLaunch";
 import { createWindows } from "./mainWindow";
@@ -20,7 +21,7 @@ import { Settings, State } from "./settings";
 import { setAsDefaultProtocolClient } from "./utils/setAsDefaultProtocolClient";
 import { isDeckGameMode } from "./utils/steamOS";
 
-console.log("Equibop v" + app.getVersion());
+console.log("Infinibop v" + app.getVersion());
 
 process.env.EQUICORD_USER_DATA_DIR = DATA_DIR;
 
@@ -33,6 +34,13 @@ function init() {
 
     const { disableSmoothScroll, hardwareAcceleration, hardwareVideoAcceleration } = Settings.store;
     const { launchArguments } = State.store;
+
+    app.commandLine.appendSwitch("disable-features", "WebRtcHWEncoding");
+    app.commandLine.appendSwitch("webrtc-max-cpu-consumption-percentage", "100");
+    app.commandLine.appendSwitch(
+        "force-fieldtrials",
+        "WebRTC-Audio-Red-For-Opus/Enabled/" + "WebRTC-Audio-OpusMinPlaybackRate/Disabled/"
+    );
 
     const enabledFeatures = new Set(app.commandLine.getSwitchValue("enable-features").split(","));
     const disabledFeatures = new Set(app.commandLine.getSwitchValue("disable-features").split(","));
@@ -112,7 +120,10 @@ function init() {
     if (isDeckGameMode) nativeTheme.themeSource = "dark";
 
     app.whenReady().then(async () => {
-        if (process.platform === "win32") app.setAppUserModelId("org.equicord.equibop");
+        if (process.platform === "win32") {
+            const profileSuffix = CommandLine.values.profile ? `.${CommandLine.values.profile}` : "";
+            app.setAppUserModelId(`org.equicord.infinibop${profileSuffix}`);
+        }
 
         registerScreenShareHandler();
         registerMediaPermissionsHandler();

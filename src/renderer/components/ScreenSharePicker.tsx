@@ -77,7 +77,7 @@ interface Source {
 
 export let currentSettings: StreamSettings | null = null;
 
-const logger = new Logger("EquibopScreenShare");
+const logger = new Logger("InfinibopScreenShare");
 
 addPatch({
     patches: [

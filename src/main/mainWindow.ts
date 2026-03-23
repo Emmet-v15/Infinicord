@@ -85,7 +85,7 @@ function initMenuBar(win: BrowserWindow) {
 
     const subMenu = [
         {
-            label: "About Equibop",
+            label: "About Infinibop",
             click: createAboutWindow
         },
         {
@@ -96,14 +96,14 @@ function initMenuBar(win: BrowserWindow) {
                 app.relaunch();
                 app.quit();
             },
-            toolTip: "Equibop will automatically restart after this operation"
+            toolTip: "Infinibop will automatically restart after this operation"
         },
         {
-            label: "Reset Equibop",
+            label: "Reset Infinibop",
             async click() {
                 await clearData(win);
             },
-            toolTip: "Equibop will automatically restart after this operation"
+            toolTip: "Infinibop will automatically restart after this operation"
         },
         {
             label: "Relaunch",
@@ -171,7 +171,7 @@ function initMenuBar(win: BrowserWindow) {
 
     const menuItems = [
         {
-            label: "Equibop",
+            label: "Infinibop",
             role: "appMenu",
             submenu: subMenu.filter(isTruthy)
         },
@@ -277,7 +277,7 @@ function initStaticTitle(win: BrowserWindow) {
 
     addSettingsListener("staticTitle", enabled => {
         if (enabled) {
-            win.setTitle("Equibop");
+            win.setTitle("Infinibop");
             win.on("page-title-updated", listener);
         } else {
             win.off("page-title-updated", listener);
@@ -373,7 +373,7 @@ function buildBrowserWindowOptions(): BrowserWindowConstructorOptions {
     }
 
     if (staticTitle) {
-        options.title = "Equibop";
+        options.title = "Infinibop";
     }
 
     if (process.platform === "darwin") {
