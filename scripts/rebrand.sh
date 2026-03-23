@@ -25,7 +25,9 @@ grep -rl "equibop\|Equibop\|EQUIBOP" "${INCLUDES[@]}" "${EXCLUDES[@]}" . \
 grep -rl "equicord\|Equicord\|EQUICORD" "${INCLUDES[@]}" "${EXCLUDES[@]}" . \
   | xargs sed -i 's/Equicord/Infinicord/g; s/equicord/infinicord/g; s/EQUICORD/INFINICORD/g'
 
-# Restore npm package name (not our code to rename)
-sed -i 's/@infinicord\/types/@equicord\/types/g' package.json
+# Restore npm package name in all files (not our code to rename)
+grep -rl "@infinicord/types" --include="*.ts" --include="*.tsx" --include="*.json" . \
+  --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git \
+  | xargs sed -i 's/@infinicord\/types/@equicord\/types/g'
 
 echo "Done."

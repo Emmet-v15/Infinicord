@@ -6,7 +6,7 @@
 
 import "./screenSharePicker.css";
 
-import { classNameFactory } from "@infinicord/types/api/Styles";
+import { classNameFactory } from "@equicord/types/api/Styles";
 import {
     BaseText,
     Button,
@@ -19,7 +19,7 @@ import {
     Paragraph,
     RestartIcon,
     Span
-} from "@infinicord/types/components";
+} from "@equicord/types/components";
 import {
     closeModal,
     Logger,
@@ -29,9 +29,9 @@ import {
     openModal,
     useAwaiter,
     useForceUpdater
-} from "@infinicord/types/utils";
-import { onceReady } from "@infinicord/types/webpack";
-import { FluxDispatcher, MediaEngineStore, Select, UserStore, useState } from "@infinicord/types/webpack/common";
+} from "@equicord/types/utils";
+import { onceReady } from "@equicord/types/webpack";
+import { FluxDispatcher, MediaEngineStore, Select, UserStore, useState } from "@equicord/types/webpack/common";
 import { Node } from "@vencord/venmic";
 import type { Dispatch, SetStateAction } from "react";
 import { addPatch } from "renderer/patches/shared";

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { Button } from "@infinicord/types/components";
+import { Button } from "@equicord/types/components";
 
 import { SettingsComponent } from "./Settings";
 
