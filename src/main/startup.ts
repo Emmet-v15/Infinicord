@@ -21,7 +21,7 @@ import { Settings, State } from "./settings";
 import { setAsDefaultProtocolClient } from "./utils/setAsDefaultProtocolClient";
 import { isDeckGameMode } from "./utils/steamOS";
 
-console.log("Infinibop v" + app.getVersion());
+console.log("Infinicord v" + app.getVersion());
 
 process.env.EQUICORD_USER_DATA_DIR = DATA_DIR;
 
@@ -122,7 +122,7 @@ function init() {
     app.whenReady().then(async () => {
         if (process.platform === "win32") {
             const profileSuffix = CommandLine.values.profile ? `.${CommandLine.values.profile}` : "";
-            app.setAppUserModelId(`org.equicord.infinibop${profileSuffix}`);
+            app.setAppUserModelId(`org.equicord.infinicord${profileSuffix}`);
         }
 
         registerScreenShareHandler();

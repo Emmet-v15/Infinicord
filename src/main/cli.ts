@@ -87,7 +87,7 @@ const extraOptions = {
     "ozone-platform": {
         hidden: process.platform !== "linux",
         type: "string",
-        description: "Whether to run Infinibop in Wayland or X11 (XWayland)",
+        description: "Whether to run Infinicord in Wayland or X11 (XWayland)",
         options: ["x11", "wayland"]
     }
 } satisfies Record<string, Option>;
@@ -125,13 +125,13 @@ export function checkCommandLineForHelpOrVersion() {
     const { help, version } = CommandLine.values;
 
     if (version) {
-        console.log(`Infinibop v${app.getVersion()}`);
+        console.log(`Infinicord v${app.getVersion()}`);
         app.exit(0);
     }
 
     if (help) {
         const base = stripIndent`
-            Infinibop v${app.getVersion()}
+            Infinicord v${app.getVersion()}
 
             Usage: ${basename(process.execPath)} [options] [url]
 
@@ -195,7 +195,7 @@ function checkCommandLineForToggleCommands() {
         app.exit(0);
     }
 
-    console.error("Infinibop is not running. Toggle commands require a running instance.");
+    console.error("Infinicord is not running. Toggle commands require a running instance.");
     app.exit(1);
 }
 
@@ -234,10 +234,10 @@ function checkForSecondInstance() {
 
     if (!app.requestSingleInstanceLock({ IS_DEV })) {
         if (IS_DEV) {
-            console.log("Infinibop is already running. Quitting previous instance...");
+            console.log("Infinicord is already running. Quitting previous instance...");
             return;
         } else {
-            console.log("Infinibop is already running. Quitting...");
+            console.log("Infinicord is already running. Quitting...");
             app.exit(0);
         }
     }

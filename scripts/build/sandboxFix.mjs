@@ -52,7 +52,7 @@ SCRIPT_DIR="$( cd "$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
 IS_STEAMOS=0
 
 if [[ "$SteamOS" == "1" && "$SteamGamepadUI" == "1" ]]; then
-    echo "Running Infinibop on SteamOS, disabling sandbox"
+    echo "Running Infinicord on SteamOS, disabling sandbox"
     IS_STEAMOS=1
 fi
 

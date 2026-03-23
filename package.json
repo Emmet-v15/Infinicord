@@ -1,8 +1,8 @@
 {
-    "name": "infinibop",
+    "name": "infinicord",
     "version": "3.1.9",
     "private": true,
-    "description": "Infinibop is a custom Discord desktop app",
+    "description": "Infinicord is a custom Discord desktop app",
     "keywords": [],
     "homepage": "https://equicord.org",
     "license": "GPL-3.0-or-later",
@@ -69,9 +69,9 @@
         "bun": ">=1.3.0"
     },
     "build": {
-        "appId": "org.equicord.infinibop",
-        "productName": "Infinibop",
-        "executableName": "infinibop",
+        "appId": "org.equicord.infinicord",
+        "productName": "Infinicord",
+        "executableName": "infinicord",
         "files": [
             "!*",
             "!node_modules",
@@ -124,13 +124,13 @@
             ],
             "desktop": {
                 "entry": {
-                    "Name": "Infinibop",
+                    "Name": "Infinicord",
                     "GenericName": "Internet Messenger",
                     "Type": "Application",
                     "Categories": "Network;InstantMessaging;Chat;",
-                    "Keywords": "discord;vencord;electron;chat;infinibop",
+                    "Keywords": "discord;vencord;electron;chat;infinicord",
                     "MimeType": "x-scheme-handler/discord",
-                    "StartupWMClass": "infinibop"
+                    "StartupWMClass": "infinicord"
                 }
             }
         },

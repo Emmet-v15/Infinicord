@@ -11,7 +11,7 @@ declare global {
     export var Vencord: any;
 
     export var IS_DEV: boolean;
-    export var INFINIBOP_GIT_HASH: string;
+    export var INFINICORD_GIT_HASH: string;
 }
 
 export {};

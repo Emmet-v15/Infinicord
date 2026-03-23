@@ -16,7 +16,7 @@ export const AutoStartToggle: SettingsComponent = ({ settings }) => {
         <>
             <VesktopSettingsSwitch
                 title="Start With System"
-                description="Automatically start Infinibop on computer start-up"
+                description="Automatically start Infinicord on computer start-up"
                 value={autoStartEnabled}
                 onChange={async v => {
                     await VesktopNative.autostart[v ? "enable" : "disable"]();
@@ -26,7 +26,7 @@ export const AutoStartToggle: SettingsComponent = ({ settings }) => {
 
             <VesktopSettingsSwitch
                 title="Auto Start Minimized"
-                description={"Start Infinibop minimized when starting with system"}
+                description={"Start Infinicord minimized when starting with system"}
                 value={settings.autoStartMinimized ?? false}
                 onChange={v => (settings.autoStartMinimized = v)}
                 disabled={!autoStartEnabled}

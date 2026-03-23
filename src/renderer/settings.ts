@@ -39,7 +39,7 @@ interface TState {
     };
 }
 
-const stateKey = "InfinibopState";
+const stateKey = "InfinicordState";
 
 const currentState: TState = (() => {
     const stored = localStorage.getItem(stateKey);

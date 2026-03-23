@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Re-applies the Infinibop rebrand after merging upstream Equibop changes.
+# Re-applies the Infinicord rebrand after merging upstream Equibop changes.
 # Usage: bash scripts/rebrand.sh
 
 set -e
@@ -7,7 +7,7 @@ set -e
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-echo "Applying Infinibop rebrand..."
+echo "Applying Infinicord rebrand..."
 
 grep -rl "equibop\|Equibop\|EQUIBOP" \
   --include="*.ts" --include="*.tsx" --include="*.mts" --include="*.mjs" \
@@ -15,6 +15,6 @@ grep -rl "equibop\|Equibop\|EQUIBOP" \
   --include="*.nsh" --include="*.desktop" --include="*.md" \
   --include="*.cc" --include="*.h" --include="*.js" \
   --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git \
-  . | xargs sed -i 's/Equibop/Infinibop/g; s/equibop/infinibop/g; s/EQUIBOP/INFINIBOP/g'
+  . | xargs sed -i 's/Equibop/Infinicord/g; s/equibop/infinicord/g; s/EQUIBOP/INFINICORD/g'
 
 echo "Done."

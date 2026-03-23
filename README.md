@@ -1,10 +1,10 @@
-# Infinibop [<img src="/static/icon.png" width="225" align="right" alt="Infinibop">](https://github.com/Equicord/Infinibop)
+# Infinicord [<img src="/static/icon.png" width="225" align="right" alt="Infinicord">](https://github.com/Equicord/Infinicord)
 
 [![Equicord](https://img.shields.io/badge/Equicord-grey?style=flat)](https://github.com/Equicord/Equicord)
-[![Tests](https://github.com/Equicord/Infinibop/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/Equicord/Infinibop/actions/workflows/test.yml)
+[![Tests](https://github.com/Equicord/Infinicord/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/Equicord/Infinicord/actions/workflows/test.yml)
 [![Discord](https://img.shields.io/discord/1173279886065029291.svg?color=768AD4&label=Discord&logo=discord&logoColor=white)](https://equicord.org/discord)
 
-Infinibop is a fork of [Vesktop](https://github.com/Vencord/Vesktop).
+Infinicord is a fork of [Vesktop](https://github.com/Vencord/Vesktop).
 
 You can join our [discord server](https://equicord.org/discord) for commits, changes, chat or even support.<br></br>
 
@@ -18,7 +18,7 @@ You can join our [discord server](https://equicord.org/discord) for commits, cha
 
 - Tray Customization with voice detection and notification badges
 - Command-line flags to toggle microphone and deafen status (Linux)
-- Custom Arguments from [this PR](https://github.com/Equicord/Infinibop/pull/46)
+- Custom Arguments from [this PR](https://github.com/Equicord/Infinicord/pull/46)
 - arRPC-bun with debug logging support https://github.com/Creationsss/arrpc-bun
 
 **Linux Note**:
@@ -28,11 +28,11 @@ You can join our [discord server](https://equicord.org/discord) for commits, cha
 **Not fully Supported**:
 - Global Keybinds (Windows/macOS - use command-line flags on Linux instead)
 
-# Infinibop Arguments
+# Infinicord Arguments
 
 ### Runtime Flags
 These flags can be passed when launching the application  
-(or via `Right-click on the Infinibop tray icon > Launch arguments`):
+(or via `Right-click on the Infinicord tray icon > Launch arguments`):
 
 ```bash
 --wayland
@@ -78,7 +78,7 @@ These arguments are parsed during the build process:
 The launcher supports a flags file located at:
 
 ```
-${XDG_CONFIG_HOME}/infinibop-flags.conf
+${XDG_CONFIG_HOME}/infinicord-flags.conf
 ```
 
 **Rules:**
@@ -87,7 +87,7 @@ ${XDG_CONFIG_HOME}/infinibop-flags.conf
 - Valid entries are appended to the execution command
 
 ## Installing
-Check the [Releases](https://github.com/Equicord/Infinibop/releases) page
+Check the [Releases](https://github.com/Equicord/Infinicord/releases) page
 
 OR
 
@@ -95,9 +95,9 @@ Check The Downloads from the [website](https://equicord.org/download)
 
 ### Linux
 
-[![Infinibop](https://img.shields.io/badge/AVAILABLE_ON_THE_AUR-333232?style=for-the-badge&logo=arch-linux&logoColor=0F94D2&labelColor=%23171717)](https://aur.archlinux.org/packages?O=0&K=infinibop)
+[![Infinicord](https://img.shields.io/badge/AVAILABLE_ON_THE_AUR-333232?style=for-the-badge&logo=arch-linux&logoColor=0F94D2&labelColor=%23171717)](https://aur.archlinux.org/packages?O=0&K=infinicord)
 <br>
-<!-- <a href="https://flathub.org/apps/io.github.equicord.infinibop">
+<!-- <a href="https://flathub.org/apps/io.github.equicord.infinicord">
   <img src="https://flathub.org/api/badge?svg" alt="Download on Flathub" style="width:220px; height:auto;">
 </a> -->
 
@@ -105,9 +105,9 @@ Check The Downloads from the [website](https://equicord.org/download)
 
 Below you can find unofficial packages created by the community. They are not officially supported by us, so before reporting issues, please first confirm the issue also happens on official builds. When in doubt, consult with their packager first. The AppImage should work on any distro that supports them, so I recommend you just use that instead!
 
-- Arch Linux: [Infinibop on the Arch user repository](https://aur.archlinux.org/packages?K=infinibop)
-- Void Linux: [Infinibop on the Void repository](https://void.creations.works/)
-- NixOS: `nix-shell -p infinibop`
+- Arch Linux: [Infinicord on the Arch user repository](https://aur.archlinux.org/packages?K=infinicord)
+- Void Linux: [Infinicord on the Void repository](https://void.creations.works/)
+- NixOS: `nix-shell -p infinicord`
 
 ## Building from Source
 
@@ -118,8 +118,8 @@ You need to have the following dependencies installed:
 Packaging will create builds in the dist/ folder
 
 ```sh
-git clone https://github.com/Equicord/Infinibop
-cd Infinibop
+git clone https://github.com/Equicord/Infinicord
+cd Infinicord
 
 # Install Dependencies
 bun install
@@ -139,11 +139,11 @@ bun package:dir
 
 ## Building LibVesktop from Source
 
-This is a small C++ helper library Infinibop uses on Linux to emit D-Bus events. By default, prebuilt binaries for x64 and arm64 are used.
+This is a small C++ helper library Infinicord uses on Linux to emit D-Bus events. By default, prebuilt binaries for x64 and arm64 are used.
 
 If you want to build it from source:
 1. Install build dependencies:
     - Debian/Ubuntu: `apt install build-essential python3 curl pkg-config libglib2.0-dev`
     - Fedora: `dnf install @c-development @development-tools python3 curl pkgconf-pkg-config glib2-devel`
 2. Run `bun buildLibVesktop`
-3. From now on, building Infinibop will use your own build
+3. From now on, building Infinicord will use your own build

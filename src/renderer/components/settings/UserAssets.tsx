@@ -87,7 +87,7 @@ function Asset({ asset }: { asset: UserAssetType }) {
             <div className="vcd-user-assets-asset">
                 <img
                     className="vcd-user-assets-image"
-                    src={`infinibop://assets/${asset}?v=${version}`}
+                    src={`infinicord://assets/${asset}?v=${version}`}
                     alt=""
                     style={{ imageRendering }}
                 />

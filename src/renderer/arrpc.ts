@@ -17,7 +17,7 @@ import { IpcCommands } from "shared/IpcEvents";
 
 import { onIpcCommand } from "./ipcCommands";
 
-const logger = new Logger("InfinibopRPC", "#5865f2");
+const logger = new Logger("InfinicordRPC", "#5865f2");
 
 interface RPCApplication {
     id: string;

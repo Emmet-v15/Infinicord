@@ -85,7 +85,7 @@ function initMenuBar(win: BrowserWindow) {
 
     const subMenu = [
         {
-            label: "About Infinibop",
+            label: "About Infinicord",
             click: createAboutWindow
         },
         {
@@ -96,14 +96,14 @@ function initMenuBar(win: BrowserWindow) {
                 app.relaunch();
                 app.quit();
             },
-            toolTip: "Infinibop will automatically restart after this operation"
+            toolTip: "Infinicord will automatically restart after this operation"
         },
         {
-            label: "Reset Infinibop",
+            label: "Reset Infinicord",
             async click() {
                 await clearData(win);
             },
-            toolTip: "Infinibop will automatically restart after this operation"
+            toolTip: "Infinicord will automatically restart after this operation"
         },
         {
             label: "Relaunch",
@@ -171,7 +171,7 @@ function initMenuBar(win: BrowserWindow) {
 
     const menuItems = [
         {
-            label: "Infinibop",
+            label: "Infinicord",
             role: "appMenu",
             submenu: subMenu.filter(isTruthy)
         },
@@ -277,7 +277,7 @@ function initStaticTitle(win: BrowserWindow) {
 
     addSettingsListener("staticTitle", enabled => {
         if (enabled) {
-            win.setTitle("Infinibop");
+            win.setTitle("Infinicord");
             win.on("page-title-updated", listener);
         } else {
             win.off("page-title-updated", listener);
@@ -373,7 +373,7 @@ function buildBrowserWindowOptions(): BrowserWindowConstructorOptions {
     }
 
     if (staticTitle) {
-        options.title = "Infinibop";
+        options.title = "Infinicord";
     }
 
     if (process.platform === "darwin") {

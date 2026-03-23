@@ -38,6 +38,6 @@ function loadSettings<T extends object = any>(file: string, name: string) {
     return store;
 }
 
-export const Settings = loadSettings<TSettings>(SETTINGS_FILE, "Infinibop settings");
+export const Settings = loadSettings<TSettings>(SETTINGS_FILE, "Infinicord settings");
 export const VencordSettings = loadSettings<any>(VENCORD_SETTINGS_FILE, "Vencord settings");
-export const State = loadSettings<TState>(STATE_FILE, "Infinibop state");
+export const State = loadSettings<TState>(STATE_FILE, "Infinicord state");

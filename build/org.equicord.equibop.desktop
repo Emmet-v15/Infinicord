@@ -1,10 +1,10 @@
 [Desktop Entry]
-Name=Infinibop
+Name=Infinicord
 GenericName=Internet Messenger
 Type=Application
-Exec=infinibop %U
-Icon=org.equicord.infinibop
+Exec=infinicord %U
+Icon=org.equicord.infinicord
 Categories=Network;InstantMessaging;Chat;
-Keywords=discord;vencord;electron;chatinfinibop;
+Keywords=discord;vencord;electron;chatinfinicord;
 MimeType=x-scheme-handler/discord;
-StartupWMClass=infinibop
+StartupWMClass=infinicord

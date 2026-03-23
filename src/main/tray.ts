@@ -220,13 +220,13 @@ export async function initTray(win: BrowserWindow, setIsQuitting: (val: boolean)
 
                 const pixmap = await getCachedTrayPixmap(trayVariant);
                 nativeSNI.setStatusNotifierIcon(pixmap);
-                nativeSNI.setStatusNotifierTitle("Infinibop");
+                nativeSNI.setStatusNotifierTitle("Infinicord");
 
                 const menuItems = [
                     { id: 1, label: win.isVisible() ? "Hide" : "Open", enabled: true, visible: true },
                     { id: 2, label: "About", enabled: true, visible: true },
                     { id: 3, label: "Repair Equicord", enabled: true, visible: true },
-                    { id: 4, label: "Reset Infinibop", enabled: true, visible: true },
+                    { id: 4, label: "Reset Infinicord", enabled: true, visible: true },
                     { id: 5, label: "Launch Arguments", enabled: true, visible: true },
                     {
                         id: 6,
@@ -271,7 +271,7 @@ export async function initTray(win: BrowserWindow, setIsQuitting: (val: boolean)
                                 }, 0);
                             });
                             break;
-                        case 4: // reset Infinibop
+                        case 4: // reset Infinicord
                             clearData(win);
                             break;
                         case 5: // launch arguments
@@ -334,7 +334,7 @@ export async function initTray(win: BrowserWindow, setIsQuitting: (val: boolean)
             }
         },
         {
-            label: "Reset Infinibop",
+            label: "Reset Infinicord",
             async click() {
                 await clearData(win);
             }
@@ -373,7 +373,7 @@ export async function initTray(win: BrowserWindow, setIsQuitting: (val: boolean)
     try {
         const initialImage = await getCachedTrayImage(trayVariant);
         tray = new Tray(initialImage);
-        tray.setToolTip("Infinibop");
+        tray.setToolTip("Infinicord");
 
         if (isLinux) {
             tray.on("click", onTrayClick);

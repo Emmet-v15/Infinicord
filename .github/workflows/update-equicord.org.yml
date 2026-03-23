@@ -1,4 +1,4 @@
-name: Update equicord.org Infinibop version
+name: Update equicord.org Infinicord version
 on:
     release:
         types:
@@ -16,7 +16,7 @@ jobs:
                   version="${{ github.event.release.tag_name }}"
                   echo "${version#v}" > public/version
                   git add public/version
-                  git commit -m "Update Infinibop version to ${{ github.event.release.tag_name }}"
+                  git commit -m "Update Infinicord version to ${{ github.event.release.tag_name }}"
                   git push https://$USERNAME:$API_TOKEN@github.com/$GH_REPO.git
               env:
                   API_TOKEN: ${{ secrets.ETOKEN }}

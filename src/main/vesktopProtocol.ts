@@ -10,7 +10,7 @@ import { handleVesktopAssetsProtocol } from "./userAssets";
 import { handleVesktopStaticProtocol } from "./vesktopStatic";
 
 app.whenReady().then(() => {
-    protocol.handle("infinibop", async req => {
+    protocol.handle("infinicord", async req => {
         const url = new URL(req.url);
 
         switch (url.hostname) {
