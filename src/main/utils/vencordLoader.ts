@@ -38,7 +38,7 @@ export async function githubGet(endpoint: string) {
 
 export async function downloadVencordAsar() {
     await downloadFile(
-        "https://github.com/Equicord/Equicord/releases/latest/download/infinicord.asar",
+        "https://github.com/Infinicord/Infinicord/releases/latest/download/infinicord.asar",
         VENCORD_DIR,
         {},
         { retryOnNetworkError: true }

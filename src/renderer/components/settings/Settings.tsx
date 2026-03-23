@@ -6,8 +6,8 @@
 
 import "./settings.css";
 
-import { classNameFactory } from "@equicord/types/api/Styles";
-import { BaseText, Divider, ErrorBoundary } from "@equicord/types/components";
+import { classNameFactory } from "@infinicord/types/api/Styles";
+import { BaseText, Divider, ErrorBoundary } from "@infinicord/types/components";
 import { ComponentType } from "react";
 import { Settings, useSettings } from "renderer/settings";
 import { isMac, isWindows } from "renderer/utils";
@@ -207,6 +207,6 @@ export default ErrorBoundary.wrap(
     },
     {
         message:
-            "Failed to render the Infinicord Settings tab. If this issue persists, try to right click the Infinicord tray icon, then click 'Repair Equicord'. And make sure your Infinicord is up to date."
+            "Failed to render the Infinicord Settings tab. If this issue persists, try to right click the Infinicord tray icon, then click 'Repair Infinicord'. And make sure your Infinicord is up to date."
     }
 );

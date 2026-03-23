@@ -10,6 +10,6 @@ import { SESSION_DATA_DIR } from "./constants";
 import { State } from "./settings";
 
 // this is in a separate file to avoid circular dependencies
-export const VENCORD_DIR = State.store.equicordDir
-    ? join(State.store.equicordDir, "infinicord")
-    : join(SESSION_DATA_DIR, "equicord.asar");
+export const VENCORD_DIR = State.store.infinicordDir
+    ? join(State.store.infinicordDir, "infinicord")
+    : join(SESSION_DATA_DIR, "infinicord.asar");

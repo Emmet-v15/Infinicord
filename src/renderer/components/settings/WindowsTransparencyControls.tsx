@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { Heading, Paragraph } from "@equicord/types/components";
-import { Margins } from "@equicord/types/utils";
-import { Select } from "@equicord/types/webpack/common";
+import { Heading, Paragraph } from "@infinicord/types/components";
+import { Margins } from "@infinicord/types/utils";
+import { Select } from "@infinicord/types/webpack/common";
 
 import { SimpleErrorBoundary } from "../SimpleErrorBoundary";
 import { SettingsComponent } from "./Settings";

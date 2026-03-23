@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { Patch } from "@equicord/types/utils/types";
+import { Patch } from "@infinicord/types/utils/types";
 
 window.VesktopPatchGlobals = {};
 

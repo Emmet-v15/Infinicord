@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { Logger } from "@equicord/types/utils";
-import { findLazy, onceReady } from "@equicord/types/webpack";
+import { Logger } from "@infinicord/types/utils";
+import { findLazy, onceReady } from "@infinicord/types/webpack";
 import {
     ApplicationAssetUtils,
     fetchApplicationsRPC,
     FluxDispatcher,
     InviteActions,
     StreamerModeStore
-} from "@equicord/types/webpack/common";
+} from "@infinicord/types/webpack/common";
 import { IpcCommands } from "shared/IpcEvents";
 
 import { onIpcCommand } from "./ipcCommands";

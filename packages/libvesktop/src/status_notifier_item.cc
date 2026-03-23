@@ -534,7 +534,7 @@ StatusNotifierItem::StatusNotifierItem()
         return;
     }
 
-    service_name = "org.equicord.infinicord.StatusNotifierItem";
+    service_name = "org.infinicord.infinicord.StatusNotifierItem";
     object_path = "/StatusNotifierItem";
 }
 

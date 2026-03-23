@@ -225,7 +225,7 @@ export async function initTray(win: BrowserWindow, setIsQuitting: (val: boolean)
                 const menuItems = [
                     { id: 1, label: win.isVisible() ? "Hide" : "Open", enabled: true, visible: true },
                     { id: 2, label: "About", enabled: true, visible: true },
-                    { id: 3, label: "Repair Equicord", enabled: true, visible: true },
+                    { id: 3, label: "Repair Infinicord", enabled: true, visible: true },
                     { id: 4, label: "Reset Infinicord", enabled: true, visible: true },
                     { id: 5, label: "Launch Arguments", enabled: true, visible: true },
                     {
@@ -262,7 +262,7 @@ export async function initTray(win: BrowserWindow, setIsQuitting: (val: boolean)
                         case 2: // about
                             createAboutWindow();
                             break;
-                        case 3: // repair equicord
+                        case 3: // repair infinicord
                             downloadVencordAsar().then(() => {
                                 setTimeout(() => {
                                     destroyTray();
@@ -325,7 +325,7 @@ export async function initTray(win: BrowserWindow, setIsQuitting: (val: boolean)
             click: createAboutWindow
         },
         {
-            label: "Repair Equicord",
+            label: "Repair Infinicord",
             async click() {
                 await downloadVencordAsar();
                 destroyTray();

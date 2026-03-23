@@ -23,7 +23,7 @@ import { isDeckGameMode } from "./utils/steamOS";
 
 console.log("Infinicord v" + app.getVersion());
 
-process.env.EQUICORD_USER_DATA_DIR = DATA_DIR;
+process.env.INFINICORD_USER_DATA_DIR = DATA_DIR;
 
 const isLinux = process.platform === "linux";
 
@@ -122,7 +122,7 @@ function init() {
     app.whenReady().then(async () => {
         if (process.platform === "win32") {
             const profileSuffix = CommandLine.values.profile ? `.${CommandLine.values.profile}` : "";
-            app.setAppUserModelId(`org.equicord.infinicord${profileSuffix}`);
+            app.setAppUserModelId(`org.infinicord.infinicord${profileSuffix}`);
         }
 
         registerScreenShareHandler();

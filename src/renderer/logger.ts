@@ -4,6 +4,6 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { Logger } from "@equicord/types/utils";
+import { Logger } from "@infinicord/types/utils";
 
 export const VesktopLogger = new Logger("Infinicord", "#d3869b");

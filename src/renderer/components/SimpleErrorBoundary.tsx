@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { Card, ErrorBoundary, HeadingTertiary, Paragraph, TextButton } from "@equicord/types/components";
-import { FluxDispatcher, InviteActions } from "@equicord/types/webpack/common";
+import { Card, ErrorBoundary, HeadingTertiary, Paragraph, TextButton } from "@infinicord/types/components";
+import { FluxDispatcher, InviteActions } from "@infinicord/types/webpack/common";
 import type { PropsWithChildren } from "react";
 
 async function openSupportChannel() {
@@ -29,7 +29,7 @@ function Fallback() {
         <Card variant="danger">
             <HeadingTertiary>Something went wrong.</HeadingTertiary>
             <Paragraph>
-                Please make sure Equicord and Infinicord are fully up to date. You can get help in our{" "}
+                Please make sure Infinicord and Infinicord are fully up to date. You can get help in our{" "}
                 <TextButton variant="link" onClick={openSupportChannel}>
                     Support Channel
                 </TextButton>
