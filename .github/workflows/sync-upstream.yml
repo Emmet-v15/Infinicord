@@ -1,0 +1,111 @@
+name: Sync Upstream
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # daily at 6am UTC
+  workflow_dispatch: # allow manual trigger
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream and fetch
+        run: |
+          git remote add upstream https://github.com/Equicord/Equibop
+          git fetch upstream
+
+      - name: Check for new upstream commits
+        id: check
+        run: |
+          COUNT=$(git log HEAD..upstream/main --oneline | wc -l)
+          echo "new_commits=$COUNT" >> $GITHUB_OUTPUT
+          echo "Upstream has $COUNT new commit(s)"
+
+      - name: Attempt merge
+        if: steps.check.outputs.new_commits > 0
+        id: merge
+        run: |
+          git merge upstream/main --no-commit --no-ff || true
+
+          CONFLICTS=$(git diff --name-only --diff-filter=U)
+
+          if echo "$CONFLICTS" | grep -q "src/preload/index.ts"; then
+            echo "preload_conflict=true" >> $GITHUB_OUTPUT
+            git merge --abort
+          else
+            echo "preload_conflict=false" >> $GITHUB_OUTPUT
+            # Auto-resolve other conflicts by taking upstream's version
+            if [ -n "$CONFLICTS" ]; then
+              echo "$CONFLICTS" | xargs git checkout --theirs --
+              echo "$CONFLICTS" | xargs git add
+            fi
+          fi
+
+      - name: Open issue on preload conflict
+        if: steps.check.outputs.new_commits > 0 && steps.merge.outputs.preload_conflict == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = "⚠️ Upstream sync blocked: conflict in preload/index.ts";
+            const body = [
+              "The automated upstream sync was aborted because `src/preload/index.ts` has a merge conflict.",
+              "",
+              "**Action required:** manually merge upstream and resolve the conflict.",
+              "",
+              "```bash",
+              "git fetch upstream",
+              "git merge upstream/main",
+              "# resolve src/preload/index.ts",
+              "bash scripts/rebrand.sh",
+              "git add -A && git commit -m \"chore: sync upstream + rebrand\"",
+              "git push",
+              "```",
+              "",
+              `Upstream commits: https://github.com/Equicord/Equibop/compare/main`
+            ].join("\n");
+
+            // Avoid duplicate issues
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              labels: "upstream-sync"
+            });
+            if (issues.data.some(i => i.title === title)) {
+              console.log("Issue already open, skipping.");
+              return;
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ["upstream-sync"]
+            });
+
+      - name: Apply rebrand
+        if: steps.check.outputs.new_commits > 0 && steps.merge.outputs.preload_conflict == 'false'
+        run: bash scripts/rebrand.sh
+
+      - name: Commit and push
+        if: steps.check.outputs.new_commits > 0 && steps.merge.outputs.preload_conflict == 'false'
+        run: |
+          git add -A
+          git commit -m "chore: sync upstream + rebrand"
+          git push
