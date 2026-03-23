@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-// import "./updater"; // disabled until Infinicord has its own release pipeline
+import "./updater";
 import "./ipc";
 import "./userAssets";
 import "./vesktopProtocol";
