@@ -197,7 +197,9 @@
             ]
         },
         "publish": {
-            "provider": "github"
+            "provider": "github",
+            "owner": "your-github-username",
+            "repo": "Infinicord"
         },
         "rpm": {
             "fpm": [
