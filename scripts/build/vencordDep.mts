@@ -17,7 +17,7 @@ const names: Record<string, string> = {
 
 export default globalExternalsWithRegExp({
     getModuleInfo(modulePath) {
-        const path = modulePath.replace("@infinicord/types/", "");
+        const path = modulePath.replace(/^@(?:infinicord|equicord)\/types\//, "");
         let varName = names[path] as string | undefined;
         if (!varName) {
             const altMapping = names[path.split("/")[0]] as string | undefined;
@@ -34,5 +34,5 @@ export default globalExternalsWithRegExp({
             type: "cjs"
         };
     },
-    modulePathFilter: /^@infinicord\/types.+$/
+    modulePathFilter: /^@(?:infinicord|equicord)\/types.+$/
 });

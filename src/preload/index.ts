@@ -161,7 +161,10 @@ function audioEnhancePatch() {
     };
 }
 
-webFrame.executeJavaScript("(" + audioEnhancePatch.toString() + ")()");
+webFrame
+    .executeJavaScript("(" + audioEnhancePatch.toString() + ")()")
+    .then(() => console.log("[Infinicord] audioEnhancePatch applied"))
+    .catch(e => console.error("[Infinicord] audioEnhancePatch failed:", e));
 
 webFrame.executeJavaScript(ipcRenderer.sendSync(IpcEvents.GET_VENCORD_RENDERER_SCRIPT));
 webFrame.executeJavaScript(ipcRenderer.sendSync(IpcEvents.GET_VESKTOP_RENDERER_SCRIPT));
