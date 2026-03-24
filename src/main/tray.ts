@@ -11,6 +11,7 @@ import { STATIC_DIR } from "shared/paths";
 import { createAboutWindow } from "./about";
 import { createArgumentsWindow } from "./arguments";
 import { restartArRPC } from "./arrpc";
+import { CommandLine } from "./cli";
 import { AppEvents } from "./events";
 import { Settings } from "./settings";
 import { resolveAssetPath } from "./userAssets";
@@ -220,7 +221,8 @@ export async function initTray(win: BrowserWindow, setIsQuitting: (val: boolean)
 
                 const pixmap = await getCachedTrayPixmap(trayVariant);
                 nativeSNI.setStatusNotifierIcon(pixmap);
-                nativeSNI.setStatusNotifierTitle("Infinicord");
+                const profile = CommandLine.values.profile ?? "1";
+                nativeSNI.setStatusNotifierTitle(`Infinicord - Profile ${profile}`);
 
                 const menuItems = [
                     { id: 1, label: win.isVisible() ? "Hide" : "Open", enabled: true, visible: true },
@@ -373,7 +375,8 @@ export async function initTray(win: BrowserWindow, setIsQuitting: (val: boolean)
     try {
         const initialImage = await getCachedTrayImage(trayVariant);
         tray = new Tray(initialImage);
-        tray.setToolTip("Infinicord");
+        const profile = CommandLine.values.profile ?? "1";
+        tray.setToolTip(`Infinicord - Profile ${profile}`);
 
         if (isLinux) {
             tray.on("click", onTrayClick);
