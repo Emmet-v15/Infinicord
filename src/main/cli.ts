@@ -249,10 +249,8 @@ export let baseUserDataPath: string;
 
 function setupProfile() {
     baseUserDataPath = app.getPath("userData");
-    const { profile } = CommandLine.values;
-    if (profile) {
-        app.setPath("userData", `${baseUserDataPath}-${profile}`);
-    }
+    const profile = CommandLine.values.profile ?? "1";
+    app.setPath("userData", `${baseUserDataPath}-${profile}`);
 }
 
 checkCommandLineForHelpOrVersion();

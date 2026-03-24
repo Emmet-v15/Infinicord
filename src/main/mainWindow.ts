@@ -270,6 +270,11 @@ function initDevtoolsListeners(win: BrowserWindow) {
     });
 }
 
+function getTitle() {
+    const profile = CommandLine.values.profile ?? "1";
+    return `Infinicord - Profile ${profile}`;
+}
+
 function initStaticTitle(win: BrowserWindow) {
     const listener = (e: { preventDefault: Function }) => e.preventDefault();
 
@@ -277,7 +282,7 @@ function initStaticTitle(win: BrowserWindow) {
 
     addSettingsListener("staticTitle", enabled => {
         if (enabled) {
-            win.setTitle("Infinicord");
+            win.setTitle(getTitle());
             win.on("page-title-updated", listener);
         } else {
             win.off("page-title-updated", listener);
@@ -373,7 +378,7 @@ function buildBrowserWindowOptions(): BrowserWindowConstructorOptions {
     }
 
     if (staticTitle) {
-        options.title = "Infinicord";
+        options.title = getTitle();
     }
 
     if (process.platform === "darwin") {
