@@ -15,10 +15,18 @@ import { DATA_DIR, VENCORD_QUICKCSS_FILE, VENCORD_SETTINGS_FILE } from "./consta
 const sharedSettingsFile = join(DATA_DIR, "settings", "settings.json");
 const sharedQuickCssFile = join(DATA_DIR, "settings", "quickCss.css");
 
-if (VENCORD_SETTINGS_FILE !== sharedSettingsFile && !existsSync(VENCORD_SETTINGS_FILE) && existsSync(sharedSettingsFile)) {
+if (
+    VENCORD_SETTINGS_FILE !== sharedSettingsFile &&
+    !existsSync(VENCORD_SETTINGS_FILE) &&
+    existsSync(sharedSettingsFile)
+) {
     copyFileSync(sharedSettingsFile, VENCORD_SETTINGS_FILE);
 }
-if (VENCORD_QUICKCSS_FILE !== sharedQuickCssFile && !existsSync(VENCORD_QUICKCSS_FILE) && existsSync(sharedQuickCssFile)) {
+if (
+    VENCORD_QUICKCSS_FILE !== sharedQuickCssFile &&
+    !existsSync(VENCORD_QUICKCSS_FILE) &&
+    existsSync(sharedQuickCssFile)
+) {
     copyFileSync(sharedQuickCssFile, VENCORD_QUICKCSS_FILE);
 }
 
