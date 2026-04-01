@@ -29,9 +29,8 @@ function audioEnhancePatch() {
     const { prototype: rtcProto } = RTCPeerConnection;
     const origSetLocal = rtcProto.setLocalDescription;
     const origSetRemote = rtcProto.setRemoteDescription;
-    const origGetStats = rtcProto.getStats;
-    const origWsSend = WebSocket.prototype.send;
-    const origGUM = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    // const origGetStats = rtcProto.getStats;
+    // const origWsSend = WebSocket.prototype.send;
 
     function mungeOpus(sdp: string): string {
         if (!sdp) return sdp;
@@ -106,59 +105,34 @@ function audioEnhancePatch() {
         };
     }
 
-    // VAD defeat: getStats — inflate audioLevel/totalAudioEnergy
-    rtcProto.getStats = async function (...args: any[]) {
-        const stats: RTCStatsReport = await (origGetStats as any).apply(this, args);
-        stats.forEach((r: any) => {
-            if (r.kind !== "audio") return;
-            try {
-                if (r.audioLevel === 0) r.audioLevel = 1e-6;
-            } catch {}
-            try {
-                if (r.totalAudioEnergy === 0) r.totalAudioEnergy = 1e-6;
-            } catch {}
-        });
-        return stats;
-    };
+    // // VAD defeat: getStats — inflate audioLevel/totalAudioEnergy
+    // rtcProto.getStats = async function (...args: any[]) {
+    //     const stats: RTCStatsReport = await (origGetStats as any).apply(this, args);
+    //     stats.forEach((r: any) => {
+    //         if (r.kind !== "audio") return;
+    //         try {
+    //             if (r.audioLevel === 0) r.audioLevel = 1e-6;
+    //         } catch {}
+    //         try {
+    //             if (r.totalAudioEnergy === 0) r.totalAudioEnergy = 1e-6;
+    //         } catch {}
+    //     });
+    //     return stats;
+    // };
 
-    // VAD defeat: WebSocket speaking flag
-    WebSocket.prototype.send = function (data) {
-        if (typeof data === "string") {
-            try {
-                const j = JSON.parse(data);
-                if (j.op === 5 && j.d) {
-                    j.d.speaking |= 1;
-                    data = JSON.stringify(j);
-                }
-            } catch {}
-        }
-        return origWsSend.call(this, data);
-    };
-
-    // getUserMedia: disable processing, inject gain
-    navigator.mediaDevices.getUserMedia = async function (constraints?: MediaStreamConstraints) {
-        if (constraints?.audio) {
-            if (typeof constraints.audio === "boolean") constraints.audio = {};
-            Object.assign(constraints.audio, {
-                echoCancellation: false,
-                noiseSuppression: false,
-                autoGainControl: false,
-                voiceActivityDetection: false,
-                sampleRate: 48000,
-                channelCount: 2
-            });
-        }
-        const stream = await origGUM(constraints);
-        if (!constraints?.audio || !stream.getAudioTracks().length) return stream;
-
-        const ctx = new AudioContext({ sampleRate: 48000, latencyHint: "interactive" });
-        const gain = ctx.createGain();
-        gain.gain.setValueAtTime(2.0, ctx.currentTime);
-
-        const dest = ctx.createMediaStreamDestination();
-        ctx.createMediaStreamSource(stream).connect(gain).connect(dest);
-        return new MediaStream([...dest.stream.getAudioTracks(), ...stream.getVideoTracks()]);
-    };
+    // // VAD defeat: WebSocket speaking flag
+    // WebSocket.prototype.send = function (data) {
+    //     if (typeof data === "string") {
+    //         try {
+    //             const j = JSON.parse(data);
+    //             if (j.op === 5 && j.d) {
+    //                 j.d.speaking |= 1;
+    //                 data = JSON.stringify(j);
+    //             }
+    //         } catch {}
+    //     }
+    //     return origWsSend.call(this, data);
+    // };
 }
 
 webFrame
