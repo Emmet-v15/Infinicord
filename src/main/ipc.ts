@@ -33,7 +33,7 @@ import { autoStart } from "./autoStart";
 import { VENCORD_QUICKCSS_FILE, VENCORD_THEMES_DIR } from "./constants";
 import { AppEvents } from "./events";
 import { getPlatformSpoofInfo } from "./gnuSpoofing";
-import { mainWin } from "./mainWindow";
+import { mainWin, setWindowUsername } from "./mainWindow";
 import { Settings, State } from "./settings";
 import { enableHardwareAcceleration } from "./startup";
 import { handle, handleSync } from "./utils/ipcWrappers";
@@ -249,4 +249,8 @@ handle(IpcEvents.VOICE_STATE_CHANGED, (_, variant: string) => {
 
 handle(IpcEvents.VOICE_CALL_STATE_CHANGED, (_, inCall: boolean) => {
     AppEvents.emit("voiceCallStateChanged", inCall);
+});
+
+handle(IpcEvents.SET_WINDOW_USERNAME, (_, username: string) => {
+    setWindowUsername(username);
 });

@@ -270,9 +270,19 @@ function initDevtoolsListeners(win: BrowserWindow) {
     });
 }
 
+let windowUsername: string | null = null;
+
+export function setWindowUsername(username: string) {
+    windowUsername = username;
+    if (mainWin && Settings.store.staticTitle) {
+        mainWin.setTitle(getTitle());
+    }
+}
+
 function getTitle() {
     const profile = CommandLine.values.profile ?? "1";
-    return `Infinicord - Profile ${profile}`;
+    const prefix = windowUsername ? `${windowUsername} - ` : "";
+    return `${prefix}Infinicord - Profile ${profile}`;
 }
 
 function initStaticTitle(win: BrowserWindow) {

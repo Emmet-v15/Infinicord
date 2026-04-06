@@ -78,7 +78,9 @@ export function cleanupTraySubscriptions() {
 }
 
 onceReady.then(() => {
-    const userID = UserStore.getCurrentUser().id;
+    const currentUser = UserStore.getCurrentUser();
+    const userID = currentUser.id;
+    VesktopNative.win.setUsername(currentUser.username);
 
     const speakingCallback = (params: any) => {
         if (params.userId === userID && params.context === "default") {

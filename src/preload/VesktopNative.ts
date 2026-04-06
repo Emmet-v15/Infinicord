@@ -95,6 +95,7 @@ export const VesktopNative = {
         openSettings: () => invoke<void>(IpcEvents.ARRPC_OPEN_SETTINGS)
     },
     win: {
+        setUsername: (username: string) => invoke<void>(IpcEvents.SET_WINDOW_USERNAME, username),
         focus: () => invoke<void>(IpcEvents.FOCUS),
         close: (key?: string) => invoke<void>(IpcEvents.CLOSE, key),
         minimize: (key?: string) => invoke<void>(IpcEvents.MINIMIZE, key),
