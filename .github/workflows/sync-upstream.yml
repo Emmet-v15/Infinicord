@@ -99,6 +99,11 @@ jobs:
               labels: ["upstream-sync"]
             });
 
+      - name: Discard upstream workflow changes
+        if: steps.check.outputs.new_commits > 0 && steps.merge.outputs.preload_conflict == 'false'
+        run: |
+          git checkout HEAD -- .github/workflows/ 2>/dev/null || true
+
       - name: Apply rebrand
         if: steps.check.outputs.new_commits > 0 && steps.merge.outputs.preload_conflict == 'false'
         run: bash scripts/rebrand.sh

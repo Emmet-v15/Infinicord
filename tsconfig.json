@@ -10,12 +10,12 @@
         "target": "ESNEXT",
         "jsx": "preserve",
 
-        // @vencord/types has some errors for now
+        // @equicord/types has some errors for now
         "skipLibCheck": true,
 
         "baseUrl": "./src/",
 
-        "typeRoots": ["./node_modules/@types", "./node_modules/@vencord"]
+        "typeRoots": ["./node_modules/@types", "./node_modules/@equicord"]
     },
     "include": ["src/**/*"],
     "exclude": ["node_modules", "dist", "src/main/arrpc/bunWorker.ts"]
