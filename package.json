@@ -1,7 +1,7 @@
 {
     "name": "infinicord",
     "desktopName": "infinicord",
-    "version": "3.2.4",
+    "version": "3.2.5",
     "private": true,
     "description": "Infinicord is a custom Discord desktop app",
     "keywords": [],

@@ -4,7 +4,11 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { existsSync, statSync } from "fs";
+import { existsSync } from "fs";
+// Electron patches fs to treat .asar files as directories with synthesized
+// stats — mtime from regular fs is not the real file's mtime. original-fs
+// is Electron's unpatched fs and reads the actual filesystem mtime.
+import { statSync } from "original-fs";
 import { join } from "path";
 
 import { USER_AGENT } from "../constants";
@@ -72,6 +76,6 @@ export async function ensureVencordFiles() {
     try {
         await downloadVencordAsar();
     } catch (e) {
-        console.error("Failed to refresh Equicord asar; using cached copy.", e);
+        console.error("[Equicord] failed to refresh cached asar, using stale copy", e);
     }
 }
