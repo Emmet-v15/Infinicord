@@ -1,88 +1,109 @@
-# Infinicord [<img src="/static/icon.png" width="200" align="right" alt="Infinicord">](https://github.com/Emmet-v15/Infinicord)
+# Infinicord [<img src="/static/icon.png" width="225" align="right" alt="Infinicord">](https://github.com/Infinicord/Infinicord)
 
-[![Tests](https://github.com/Emmet-v15/Infinicord/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/Emmet-v15/Infinicord/actions/workflows/test.yml)
-[![Sync Upstream](https://github.com/Emmet-v15/Infinicord/actions/workflows/sync-upstream.yml/badge.svg)](https://github.com/Emmet-v15/Infinicord/actions/workflows/sync-upstream.yml)
+[![Infinicord](https://img.shields.io/badge/Infinicord-grey?style=flat)](https://github.com/Infinicord/Infinicord)
+[![Tests](https://github.com/Infinicord/Infinicord/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/Infinicord/Infinicord/actions/workflows/test.yml)
+[![Discord](https://img.shields.io/discord/1173279886065029291.svg?color=768AD4&label=Discord&logo=discord&logoColor=white)](https://infinicord.org/discord)
 
-A custom Discord desktop app built on [Vesktop](https://github.com/Vencord/Vesktop), with [Vencord](https://github.com/Vendicated/Vencord) preinstalled and enhanced audio quality out of the box.
+Infinicord is a fork of [Vesktop](https://github.com/Vencord/Vesktop).
 
-## Features
+You can join our [discord server](https://infinicord.org/discord) for commits, changes, chat or even support.<br></br>
 
-- **Vencord preinstalled** — all plugins and themes ready to go
-- **Enhanced audio** — stereo 48kHz, high bitrate Opus, VAD defeat, noise suppression disabled
-- **Multi-profile support** — run two accounts simultaneously with `--profile <name>`
-- **Lightweight** — faster and leaner than the official Discord client
-- **Better privacy** — Discord has no access to your system
-- **Linux screenshare** with audio and Wayland support
+**Main features**:
+- Infinicord preinstalled
+- Much more lightweight and faster than the official Discord app
+- Linux Screenshare with sound & wayland
+- Much better privacy, since Discord has no access to your system
 
-## Download
+**Extra included changes**
 
-Check the [Releases](https://github.com/Emmet-v15/Infinicord/releases) page.
+- Tray Customization with voice detection and notification badges
+- Command-line flags to toggle microphone and deafen status (Linux)
+- Custom Arguments from [this PR](https://github.com/Infinicord/Infinicord/pull/46)
+- arRPC-bun with debug logging support https://github.com/Creationsss/arrpc-bun
 
-## Usage
+**Not fully Supported**:
+- Global Keybinds (Windows/macOS - use command-line flags on Linux instead)
 
-### Multiple Instances
+## Infinicord Arguments
+> [!NOTE]
+> For the full list of supported flags and how to apply them, see the
+[Tips & Tricks](https://infinicord.org/wiki/linux/tips/) page on the wiki!
 
-Run two Discord accounts at the same time — each gets its own isolated data directory:
+### Quick reference
 
-```bash
-# First account (default)
-infinicord
+| Flag                            | Description                             |
+|---------------------------------|-----------------------------------------|
+| `--ozone-platform=wayland`      | Force native Wayland                    |
+| `--ozone-platform=x11`          | Force XWayland                          |
+| `--no-sandbox`                  | Disable Chromium sandbox (use with caution) |
+| `--force_high_performance_gpu`  | Prefer discrete GPU                     |
+| `--start-minimized`             | Launch minimized to tray                |
+| `--toggle-mic`                  | Toggle mic (bind to shortcuts)          |
+| `--toggle-deafen`               | Toggle deafen (bind to shortcuts)       |
+| `--toggle-vad`                  | Toggle Voice Activity Detection (Voice Activity <-> Push To Talk) |
 
-# Second account
-infinicord --profile 2
-```
+### Persistent flags
 
-### Runtime Flags
+Add flags to `${XDG_CONFIG_HOME}/infinicord-flags.conf` — one per line, lines starting with `#` are comments.
 
-| Flag | Description |
-|---|---|
-| `--profile <name>` | Use a named profile (separate settings & session) |
-| `--start-minimized` | Start minimized to tray |
-| `--disable-gpu` | Disable hardware acceleration |
-| `--wayland` | Force Ozone Wayland platform |
-| `--no-sandbox` | Disable Chromium sandbox (e.g. when running as root) |
-| `--toggle-mic` | Toggle microphone (Linux, bind to a shortcut) |
-| `--toggle-deafen` | Toggle deafen (Linux, bind to a shortcut) |
+## Installing
+Check the [Releases](https://github.com/Infinicord/Infinicord/releases) page
 
-Flags can also be set persistently via the tray icon → **Launch arguments**.
+OR
 
-### Flags File (Linux)
+Check The Downloads from the [website](https://infinicord.org/install)
 
-```
-${XDG_CONFIG_HOME}/infinicord-flags.conf
-```
+### Linux
 
-Lines starting with `#` are comments. Each flag goes on its own line.
+[![Infinicord](https://img.shields.io/badge/AVAILABLE_ON_THE_AUR-333232?style=for-the-badge&logo=arch-linux&logoColor=0F94D2&labelColor=%23171717)](https://aur.archlinux.org/packages?O=0&K=infinicord)
+<br>
+<!-- <a href="https://flathub.org/apps/io.github.infinicord.infinicord">
+  <img src="https://flathub.org/api/badge?svg" alt="Download on Flathub" style="width:220px; height:auto;">
+</a> -->
+
+#### Community packages
+
+Below you can find unofficial packages created by the community. They are not officially supported by us, so before reporting issues, please first confirm the issue also happens on official builds. When in doubt, consult with their packager first. The AppImage should work on any distro that supports them, so I recommend you just use that instead!
+
+- Arch Linux: [Infinicord on the Arch user repository](https://aur.archlinux.org/packages?K=infinicord)
+- Void Linux: [Infinicord on the Void repository](https://void.creations.works/)
+- NixOS: `nix-shell -p infinicord`
 
 ## Building from Source
 
-**Requirements:** [Git](https://git-scm.com) · [Bun](https://bun.sh)
+You need to have the following dependencies installed:
+- [Git](https://git-scm.com/downloads)
+- [Bun](https://bun.sh)
+
+Packaging will create builds in the dist/ folder
 
 ```sh
-git clone https://github.com/Emmet-v15/Infinicord
+git clone https://github.com/Infinicord/Infinicord
 cd Infinicord
+
+# Install Dependencies
 bun install
 
-# Run without packaging
+# Either run it without packaging
 bun start
 
-# Package for your OS
+# Or package (will build packages for your OS)
 bun package
 
-# Package to a directory only
+# Or only build the Linux Pacman package
+bun package --linux pacman
+
+# Or package to a directory only
 bun package:dir
 ```
 
-## Syncing Upstream
+## Building LibVesktop from Source
 
-Infinicord automatically pulls updates from [Equibop](https://github.com/Equicord/Equibop) daily and re-applies the rebrand. If a conflict is detected in a customized file, a GitHub issue is opened instead.
+This is a small C++ helper library Infinicord uses on Linux to emit D-Bus events. By default, prebuilt binaries for x64 and arm64 are used.
 
-To sync manually:
-
-```bash
-git fetch upstream
-git merge upstream/main
-bash scripts/rebrand.sh
-git add -A && git commit -m "chore: sync upstream + rebrand"
-git push
-```
+If you want to build it from source:
+1. Install build dependencies:
+    - Debian/Ubuntu: `apt install build-essential python3 curl pkg-config libglib2.0-dev`
+    - Fedora: `dnf install @c-development @development-tools python3 curl pkgconf-pkg-config glib2-devel`
+2. Run `bun buildLibVesktop`
+3. From now on, building Infinicord will use your own build
