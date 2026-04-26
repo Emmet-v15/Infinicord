@@ -4,7 +4,17 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { findByProps } from "@equicord/types/webpack";
+import { find } from "@equicord/types/webpack";
+
+// Suppress the verbose "no module found" warnings from webpack lookups for
+// selectors Discord no longer exposes; the plugin already no-ops on null.
+function safeFind<T = any>(filter: (m: any) => boolean): T | null {
+    try {
+        return (find(filter) as T) ?? null;
+    } catch {
+        return null;
+    }
+}
 
 class FakeDeafen {
     private original_voice_state_update: any;
@@ -12,17 +22,22 @@ class FakeDeafen {
     private is_fd_enabled = false;
 
     public start() {
-        const GatewayConnection = findByProps("voiceStateUpdate");
-        if (!GatewayConnection) return;
-        this.original_voice_state_update = GatewayConnection.voiceStateUpdate;
-        const self = this;
-        GatewayConnection.voiceStateUpdate = function (args: any) {
-            if (self.is_fd_enabled && args) {
-                args.selfMute = true;
-                args.selfDeaf = true;
-            }
-            return self.original_voice_state_update.apply(this, arguments);
-        };
+        // TODO: Discord no longer exposes a `voiceStateUpdate` function on any
+        // module — the gateway send is captured in a closure. Reimplement by
+        // patching the WebSocket send (preload-side) or by splicing into the
+        // sender via Vencord.Webpack.Patches once we identify the right find.
+        const GatewayConnection = safeFind<any>(m => typeof m?.voiceStateUpdate === "function");
+        if (GatewayConnection) {
+            this.original_voice_state_update = GatewayConnection.voiceStateUpdate;
+            const self = this;
+            GatewayConnection.voiceStateUpdate = function (args: any) {
+                if (self.is_fd_enabled && args) {
+                    args.selfMute = true;
+                    args.selfDeaf = true;
+                }
+                return self.original_voice_state_update.apply(this, arguments);
+            };
+        }
 
         this.ui_mutation_observer = new MutationObserver(() => this.mount_fd_button());
         this.ui_mutation_observer.observe(document.body, { childList: true, subtree: true });
@@ -30,7 +45,7 @@ class FakeDeafen {
     }
 
     public stop() {
-        const GatewayConnection = findByProps("voiceStateUpdate");
+        const GatewayConnection = safeFind<any>(m => typeof m?.voiceStateUpdate === "function");
         if (GatewayConnection && this.original_voice_state_update) {
             GatewayConnection.voiceStateUpdate = this.original_voice_state_update;
         }
@@ -40,10 +55,12 @@ class FakeDeafen {
     }
 
     private refresh_voice_state() {
-        const ChannelStore = findByProps("getChannel", "getDMFromUserId");
-        const SelectedChannelStore = findByProps("getVoiceChannelId");
-        const GatewayConnection = findByProps("voiceStateUpdate");
-        const MediaEngineStore = findByProps("isDeaf", "isMute");
+        const ChannelStore = safeFind<any>(
+            m => typeof m?.getChannel === "function" && typeof m?.getDMFromUserId === "function"
+        );
+        const SelectedChannelStore = safeFind<any>(m => typeof m?.getVoiceChannelId === "function");
+        const GatewayConnection = safeFind<any>(m => typeof m?.voiceStateUpdate === "function");
+        const MediaEngineStore = safeFind<any>(m => typeof m?.isDeaf === "function" && typeof m?.isMute === "function");
         if (!GatewayConnection || !SelectedChannelStore) return;
 
         const channelId = SelectedChannelStore.getVoiceChannelId();

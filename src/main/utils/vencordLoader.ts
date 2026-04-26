@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { existsSync } from "fs";
+import { existsSync, statSync } from "fs";
 import { join } from "path";
 
 import { USER_AGENT } from "../constants";
@@ -49,8 +49,29 @@ export function isValidVencordInstall(dir: string) {
     return existsSync(join(dir, "equibop/main.js"));
 }
 
-export async function ensureVencordFiles() {
-    if (existsSync(VENCORD_DIR)) return;
+// Re-fetch the cached Equicord asar if it's older than this. Equicord ships
+// frequent fixes for Discord-side breakage; without periodic refresh, users on
+// older clones (e.g. additional profiles) silently keep running stale code.
+const ASAR_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
-    await downloadVencordAsar();
+export async function ensureVencordFiles() {
+    if (!existsSync(VENCORD_DIR)) {
+        await downloadVencordAsar();
+        return;
+    }
+
+    let ageMs: number;
+    try {
+        ageMs = Date.now() - statSync(VENCORD_DIR).mtimeMs;
+    } catch {
+        return;
+    }
+
+    if (ageMs < ASAR_MAX_AGE_MS) return;
+
+    try {
+        await downloadVencordAsar();
+    } catch (e) {
+        console.error("Failed to refresh Equicord asar; using cached copy.", e);
+    }
 }
