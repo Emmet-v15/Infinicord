@@ -483,8 +483,8 @@
 
     renderStatus();
 
-    window.updateStatus = function (newStatus) {
+    VesktopArRPCNative.onStatusUpdate(function (newStatus) {
         status = newStatus;
         renderStatus();
-    };
+    });
 </script>

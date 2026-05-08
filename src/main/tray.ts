@@ -74,15 +74,11 @@ function nativeImageToPixmap(image: NativeImage): Promise<Buffer> {
                 const b = bitmap[i + 2];
                 const a = bitmap[i + 3];
 
-                const alpha = a / 255;
-                const premultR = Math.round(r * alpha);
-                const premultG = Math.round(g * alpha);
-                const premultB = Math.round(b * alpha);
-
-                pixmap[8 + i] = a;
-                pixmap[8 + i + 1] = premultB;
-                pixmap[8 + i + 2] = premultG;
-                pixmap[8 + i + 3] = premultR;
+                const o = 8 + i;
+                pixmap[o] = a;
+                pixmap[o + 1] = ((b * a + 127) * 257) >>> 16;
+                pixmap[o + 2] = ((g * a + 127) * 257) >>> 16;
+                pixmap[o + 3] = ((r * a + 127) * 257) >>> 16;
             }
 
             resolve(pixmap);

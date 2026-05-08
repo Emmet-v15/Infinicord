@@ -14,6 +14,7 @@ import { WebSocket } from "ws";
 
 import { mainWin } from "../mainWindow";
 import { Settings } from "../settings";
+import { isLocalArrpcHost, sanitizeArrpcPort } from "../utils/arrpcHostValidation";
 
 const STATE_FILE_PREFIX = "arrpc-state";
 const STATE_FILE_MAX_INDEX = 9;
@@ -173,6 +174,7 @@ let appVersion: string | null = null;
 const INIT_TIMEOUT_MS = 10000;
 const PROCESS_KILL_TIMEOUT_MS = 5000;
 const STATE_CHECK_INTERVAL_MS = 500;
+const STATE_CHECK_MAX_ATTEMPTS = Math.ceil((INIT_TIMEOUT_MS * 2) / STATE_CHECK_INTERVAL_MS);
 const STATE_FILE_STALE_MS = 60000;
 const WS_RECONNECT_INTERVAL_MS = 5000;
 const AUTO_RESTART_DELAY_MS = 5000;
@@ -185,6 +187,17 @@ let autoRestartTimer: NodeJS.Timeout | null = null;
 let ws: WebSocket | null = null;
 let wsReconnectTimer: NodeJS.Timeout | null = null;
 
+function isOwnedByCurrentUser(path: string): boolean {
+    if (process.platform === "win32") return true;
+    try {
+        const st = statSync(path);
+        const myUid = typeof process.getuid === "function" ? process.getuid() : -1;
+        return st.uid === myUid;
+    } catch {
+        return false;
+    }
+}
+
 function findStateFile(): string | null {
     const tempDir = tmpdir();
     const candidates: { path: string; timestamp: number }[] = [];
@@ -192,6 +205,10 @@ function findStateFile(): string | null {
     for (let i = 0; i <= STATE_FILE_MAX_INDEX; i++) {
         const path = join(tempDir, `${STATE_FILE_PREFIX}-${i}`);
         if (!existsSync(path)) continue;
+        if (!isOwnedByCurrentUser(path)) {
+            debugLog(`Skipping state file owned by another user: ${path}`);
+            continue;
+        }
         try {
             const content = JSON.parse(readFileSync(path, "utf-8")) as StateFileContent;
             const age = Date.now() - content.timestamp;
@@ -263,7 +280,9 @@ function handleStateUpdate(state: StateFileContent) {
 function startStateFileWatching() {
     stopStateFileWatching();
 
+    let attempts = 0;
     stateCheckInterval = setInterval(() => {
+        attempts++;
         const path = findStateFile();
         if (path) {
             stateFilePath = path;
@@ -289,6 +308,12 @@ function startStateFileWatching() {
                 }
             } catch (e) {
                 debugLog(`Failed to watch state file, continuing to poll: ${e}`);
+            }
+        } else if (attempts >= STATE_CHECK_MAX_ATTEMPTS) {
+            debugLog(`State file never appeared after ${attempts} attempts, giving up polling`);
+            if (stateCheckInterval) {
+                clearInterval(stateCheckInterval);
+                stateCheckInterval = null;
             }
         }
     }, STATE_CHECK_INTERVAL_MS);
@@ -316,14 +341,14 @@ function findAnyStateFile(): StateFileResult {
 
     for (let i = 0; i <= STATE_FILE_MAX_INDEX; i++) {
         const path = join(tempDir, `${STATE_FILE_PREFIX}-${i}`);
-        if (existsSync(path)) {
-            try {
-                const content = JSON.parse(readFileSync(path, "utf-8")) as StateFileContent;
-                const age = Date.now() - content.timestamp;
-                return { content, stale: age >= STATE_FILE_STALE_MS };
-            } catch {
-                continue;
-            }
+        if (!existsSync(path)) continue;
+        if (!isOwnedByCurrentUser(path)) continue;
+        try {
+            const content = JSON.parse(readFileSync(path, "utf-8")) as StateFileContent;
+            const age = Date.now() - content.timestamp;
+            return { content, stale: age >= STATE_FILE_STALE_MS };
+        } catch {
+            continue;
         }
     }
     return { content: null, stale: false };
@@ -331,9 +356,11 @@ function findAnyStateFile(): StateFileResult {
 
 function getWsConnectionInfo(): { host: string; port: number } | null {
     const customHost = Settings.store.arRPCWebSocketCustomHost;
-    const customPort = Settings.store.arRPCWebSocketCustomPort;
+    const customPort = sanitizeArrpcPort(Settings.store.arRPCWebSocketCustomPort);
 
-    if (customHost || customPort) {
+    if (customHost && !isLocalArrpcHost(customHost)) {
+        console.warn(`[arRPC] Ignoring non-local custom host from settings: ${customHost}`);
+    } else if (customHost || customPort) {
         return {
             host: customHost || "127.0.0.1",
             port: customPort || 1337
@@ -341,14 +368,12 @@ function getWsConnectionInfo(): { host: string; port: number } | null {
     }
 
     const state = readStateFile();
-    if (state?.servers.bridge) {
-        return {
-            host: state.servers.bridge.host,
-            port: state.servers.bridge.port
-        };
+    if (state?.servers.bridge && isLocalArrpcHost(state.servers.bridge.host)) {
+        const statePort = sanitizeArrpcPort(state.servers.bridge.port);
+        if (statePort) return { host: state.servers.bridge.host, port: statePort };
     }
 
-    if (serverHost && serverPort) {
+    if (serverHost && serverPort && isLocalArrpcHost(serverHost)) {
         return { host: serverHost, port: serverPort };
     }
 
@@ -412,17 +437,18 @@ function connectWebSocket() {
         ws = null;
 
         const autoReconnect = Settings.store.arRPCWebSocketAutoReconnect ?? true;
-        debugLog(`WebSocket closed${autoReconnect ? ", will reconnect" : ""}`);
-
-        mainWin?.webContents.send(IpcEvents.ARRPC_ACTIVITY, { activity: null });
+        const willReconnect = autoReconnect && shouldConnectWebSocket();
+        debugLog(`WebSocket closed${willReconnect ? ", will reconnect" : ""}`);
 
         if (wsReconnectTimer) clearTimeout(wsReconnectTimer);
 
-        if (autoReconnect && shouldConnectWebSocket()) {
+        if (willReconnect) {
             wsReconnectTimer = setTimeout(() => {
                 debugLog("Attempting WebSocket reconnect...");
                 connectWebSocket();
             }, WS_RECONNECT_INTERVAL_MS);
+        } else {
+            mainWin?.webContents.send(IpcEvents.ARRPC_ACTIVITY, { activity: null });
         }
     });
 
@@ -730,8 +756,21 @@ async function initArRPCInner() {
                 try {
                     const message = JSON.parse(line);
                     if (message.type === "STREAMERMODE") {
-                        debugLog(`Streamer mode changed: ${message.data}`);
-                        mainWin?.webContents.send(IpcEvents.ARRPC_ACTIVITY, JSON.parse(message.data));
+                        const inner = typeof message.data === "string" ? JSON.parse(message.data) : null;
+                        if (
+                            inner &&
+                            typeof inner === "object" &&
+                            inner.socketId === "STREAMERMODE" &&
+                            (inner.activity === null || (inner.activity && typeof inner.activity === "object"))
+                        ) {
+                            debugLog(`Streamer mode changed: ${inner.activity != null ? "ON" : "OFF"}`);
+                            mainWin?.webContents.send(IpcEvents.ARRPC_ACTIVITY, {
+                                socketId: "STREAMERMODE",
+                                activity: inner.activity
+                            });
+                        } else {
+                            debugLog("Discarding malformed STREAMERMODE payload");
+                        }
                         continue;
                     }
                 } catch {}

@@ -10,6 +10,7 @@ import { STATIC_DIR } from "shared/paths";
 
 import { getArRPCStatus, restartArRPC } from "./arrpc";
 import { Settings } from "./settings";
+import { isLocalArrpcHost, sanitizeArrpcPort } from "./utils/arrpcHostValidation";
 import { makeLinksOpenExternally } from "./utils/makeLinksOpenExternally";
 import { loadView } from "./vesktopStatic";
 
@@ -32,7 +33,10 @@ export function createArRPCWindow() {
               : {}),
         height: 450,
         width: 500,
-        resizable: false
+        resizable: false,
+        webPreferences: {
+            preload: join(__dirname, "arrpcSettingsPreload.js")
+        }
     });
 
     makeLinksOpenExternally(arrpcWindow);
@@ -54,12 +58,9 @@ export function createArRPCWindow() {
     loadView(arrpcWindow, "arrpc.html", data);
 
     statusInterval = setInterval(() => {
-        if (arrpcWindow && !arrpcWindow.isDestroyed()) {
-            const currentStatus = getArRPCStatus();
-            arrpcWindow.webContents.executeJavaScript(
-                `window.updateStatus && window.updateStatus(${JSON.stringify(currentStatus)})`
-            );
-        }
+        if (!arrpcWindow || arrpcWindow.isDestroyed()) return;
+        if (!arrpcWindow.isVisible() || arrpcWindow.isMinimized()) return;
+        arrpcWindow.webContents.send("arrpc-status-update", getArRPCStatus());
     }, 2000);
 
     arrpcWindow.webContents.addListener("console-message", e => {
@@ -95,10 +96,16 @@ export function createArRPCWindow() {
                 Settings.store.arRPCWebSocketAutoReconnect = value === "true";
                 break;
             case "arRPCWebSocketCustomHost":
-                Settings.store.arRPCWebSocketCustomHost = value || undefined;
+                if (!value) {
+                    Settings.store.arRPCWebSocketCustomHost = undefined;
+                } else if (isLocalArrpcHost(value)) {
+                    Settings.store.arRPCWebSocketCustomHost = value;
+                } else {
+                    console.warn(`[Equibop] Refusing non-local arRPC host: ${value}`);
+                }
                 break;
             case "arRPCWebSocketCustomPort":
-                Settings.store.arRPCWebSocketCustomPort = value ? parseInt(value, 10) : undefined;
+                Settings.store.arRPCWebSocketCustomPort = value ? sanitizeArrpcPort(value) : undefined;
                 break;
         }
     });
