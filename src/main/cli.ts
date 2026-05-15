@@ -271,6 +271,9 @@ function checkCommandLineForQueryCommands() {
 
 function setupSecondInstanceHandler() {
     app.on("second-instance", (_event, commandLine, _cwd, data: any) => {
+        // Second instances launched without additionalData (e.g. packaged-install
+        // shortcuts, discord:// protocol handlers) pass null here; treat it as {}.
+        data ??= {};
         if (data.query && data.responseFile) {
             const allowedQueries: string[] = [
                 IpcCommands.QUERY_IS_IN_CALL,
