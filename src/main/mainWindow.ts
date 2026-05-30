@@ -376,7 +376,7 @@ function buildBrowserWindowOptions(): BrowserWindowConstructorOptions {
         ...getWindowBoundsOptions()
     };
 
-    if (transparent) {
+    if (transparent && process.platform !== "darwin") {
         options.transparent = true;
         options.backgroundColor = "#00000000";
     }
@@ -398,8 +398,10 @@ function buildBrowserWindowOptions(): BrowserWindowConstructorOptions {
         options.titleBarStyle = "hidden";
         options.trafficLightPosition = { x: 10, y: 10 };
 
-        if (macosVibrancyStyle) {
-            options.vibrancy = macosVibrancyStyle;
+        if (transparent) {
+            options.titleBarStyle = "hiddenInset";
+            options.vibrancy = macosVibrancyStyle || "sidebar";
+            options.visualEffectState = "active";
             options.backgroundColor = "#00000000";
         }
     }
@@ -513,9 +515,7 @@ export async function createWindows() {
         }
 
         if (isDeckGameMode) {
-            // always use entire display
             mainWin?.setFullScreen(true);
-
             askToApplySteamLayout(mainWin);
         }
 

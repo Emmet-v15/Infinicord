@@ -53,7 +53,7 @@ export function isValidVencordInstall(dir: string) {
     return existsSync(join(dir, "equibop/main.js"));
 }
 
-// Re-fetch the cached Equicord asar if it's older than this. Equicord ships
+// Re-fetch the cached Infinicord asar if it's older than this. Infinicord ships
 // frequent fixes for Discord-side breakage; without periodic refresh, users on
 // older clones (e.g. additional profiles) silently keep running stale code.
 const ASAR_MAX_AGE_MS = 24 * 60 * 60 * 1000;
@@ -76,6 +76,6 @@ export async function ensureVencordFiles() {
     try {
         await downloadVencordAsar();
     } catch (e) {
-        console.error("[Equicord] failed to refresh cached asar, using stale copy", e);
+        console.error("[Infinicord] failed to refresh cached asar, using stale copy", e);
     }
 }
