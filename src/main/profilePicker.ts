@@ -6,9 +6,13 @@
 
 /*
  * Profile picker: when enabled, the plain launcher (no --profile) shows a
- * Steam-style "Who's chatting?" window. "Default" continues in this process;
- * a numbered profile is spawned detached via --profile N and this launcher
- * exits, so no profile's single-instance lock is held by the picker.
+ * Steam-style "Who's chatting?" window after the loading splash. "Default"
+ * continues in this process; a numbered profile is spawned detached via
+ * --profile N and this launcher exits, so no profile's single-instance lock
+ * is held by the picker.
+ *
+ * Profiles are discovered from existing data dirs, NOT Start Menu
+ * shortcuts — INFINICORD.lnk alone is the only entry point.
  */
 
 import { app } from "electron";
@@ -20,17 +24,17 @@ import { STATIC_DIR } from "shared/paths";
 import { CommandLine } from "./cli";
 import { createWindows } from "./mainWindow";
 import { Settings, State } from "./settings";
+import { getSplash } from "./splash";
 import { makeLinksOpenExternally } from "./utils/makeLinksOpenExternally";
-import { getSessionsState, launchSession, SESSIONS_MAX, setSessionCount } from "./utils/profiles";
+import { getKnownProfiles, launchSession, SESSIONS_MAX } from "./utils/profiles";
 import { loadView } from "./vesktopStatic";
 
 export function shouldShowProfilePicker() {
     // explicit profile or autostart/boot launches skip the picker entirely
     if (CommandLine.values.profile || CommandLine.values["start-minimized"]) return false;
 
-    const sessions = getSessionsState();
-    // nothing to pick until at least one profile shortcut exists
-    return sessions.supported && sessions.shortcuts.length > 0 && !!Settings.store.askProfileOnLaunch;
+    // nothing to pick until at least one profile exists on disk
+    return process.platform === "win32" && getKnownProfiles().length > 0 && !!Settings.store.askProfileOnLaunch;
 }
 
 // tile 96px + gap 22px on an 80px gutter; tiles wrap beyond 1280px width
@@ -40,9 +44,9 @@ const BASE_HEIGHT = 250;
 const ROW_HEIGHT = 146;
 
 export function createProfilePicker() {
-    const { shortcuts } = getSessionsState();
+    const profiles = getKnownProfiles();
 
-    const tiles = shortcuts.length + 2; // default + add-new
+    const tiles = profiles.length + 2; // default + add-new
     const width = Math.min(1280, Math.max(560, tiles * TILE_UNIT + GUTTER));
     const perRow = Math.floor((width - GUTTER) / TILE_UNIT);
     const rows = Math.ceil(tiles / perRow);
@@ -64,9 +68,9 @@ export function createProfilePicker() {
     makeLinksOpenExternally(win);
 
     const params = new URLSearchParams({
-        profiles: shortcuts.join(","),
+        profiles: profiles.join(","),
         last: String(State.store.lastProfile ?? "default"),
-        canAdd: shortcuts.length < SESSIONS_MAX ? "1" : "0"
+        canAdd: profiles.length < SESSIONS_MAX ? "1" : "0"
     });
     loadView(win, "profile-picker.html", params);
 
@@ -79,14 +83,12 @@ export function createProfilePicker() {
 
         if (msg === "addnew") {
             settled = true;
-            const next = shortcuts.length ? Math.min(Math.max(...shortcuts) + 1, SESSIONS_MAX) : 1;
+            // first free number — fills gaps if a profile dir was removed
+            const next =
+                Array.from({ length: SESSIONS_MAX }, (_, i) => i + 1).find(n => !profiles.includes(n)) ?? SESSIONS_MAX;
             State.store.lastProfile = next;
             launchSession(next);
-            // reconcile Start Menu shortcuts before exiting — exiting earlier
-            // kills the spawn before PowerShell ever starts
-            setSessionCount(next)
-                .catch(e => console.error("Failed to create profile shortcuts:", e))
-                .finally(() => app.exit());
+            app.exit();
             return;
         }
 
@@ -97,6 +99,8 @@ export function createProfilePicker() {
             settled = true;
             State.store.lastProfile = "default";
             win.close();
+            // the pre-picker splash is done; createWindows shows a fresh one
+            getSplash()?.destroy();
             createWindows();
             return;
         }

@@ -87,6 +87,27 @@ export interface SessionsState {
     max: number;
 }
 
+const PROFILE_DIR_PATTERN = /^infinicord-(\d+)$/;
+const BASE_ROAMING_DIR = process.env.APPDATA ?? ".";
+
+/**
+ * Profile numbers that already have data on disk (i.e. were launched at
+ * least once). The picker uses this instead of Start Menu shortcuts, so
+ * the plain INFINICORD.lnk alone is enough to reach every profile.
+ */
+export function getKnownProfiles(): number[] {
+    try {
+        return readdirSync(BASE_ROAMING_DIR)
+            .map(name => PROFILE_DIR_PATTERN.exec(name)?.[1])
+            .filter((n): n is string => !!n)
+            .map(Number)
+            .filter(n => n >= 1 && n <= SESSIONS_MAX)
+            .sort((a, b) => a - b);
+    } catch {
+        return [];
+    }
+}
+
 export function getSessionsState(): SessionsState {
     if (!isSupported()) return { supported: false, shortcuts: [], max: SESSIONS_MAX };
     return { supported: true, shortcuts: existingShortcutNumbers().sort((a, b) => a - b), max: SESSIONS_MAX };

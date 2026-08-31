@@ -17,6 +17,7 @@ import { registerMediaPermissionsHandler } from "./mediaPermissions";
 import { createProfilePicker, shouldShowProfilePicker } from "./profilePicker";
 import { registerScreenShareHandler } from "./screenShare";
 import { Settings, State } from "./settings";
+import { createSplashWindow } from "./splash";
 import { startBootUpdateCheck } from "./updater";
 import { setAsDefaultProtocolClient } from "./utils/setAsDefaultProtocolClient";
 import { isDeckGameMode } from "./utils/steamOS";
@@ -160,10 +161,15 @@ async function bootstrap() {
     startBootUpdateCheck();
 
     if (shouldShowProfilePicker()) {
-        createProfilePicker();
-    } else {
-        createWindows();
+        // splash first, then the picker pops over it; picking a profile
+        // spawns its own instance (with its own splash), and Default hands
+        // control back to createWindows for the second splash + main window
+        await createSplashWindow();
+        setTimeout(createProfilePicker, 1500);
+        return;
     }
+
+    createWindows();
 }
 
 export let darwinURL: string | undefined;
