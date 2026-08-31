@@ -32,6 +32,8 @@ export const VENCORD_SETTINGS_DIR = join(app.getPath("userData"), "settings");
 mkdirSync(VENCORD_SETTINGS_DIR, { recursive: true });
 export const VENCORD_QUICKCSS_FILE = join(VENCORD_SETTINGS_DIR, "quickCss.css");
 export const VENCORD_SETTINGS_FILE = join(VENCORD_SETTINGS_DIR, "settings.json");
+
+// Shared across all profiles
 export const VENCORD_THEMES_DIR = join(DATA_DIR, "themes");
 
 export const USER_AGENT = `Infinicord/${app.getVersion()} (https://github.com/Emmet-v15/Infinicord)`;

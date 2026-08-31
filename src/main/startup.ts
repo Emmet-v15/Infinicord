@@ -35,6 +35,13 @@ function init() {
     const { disableSmoothScroll, hardwareAcceleration, hardwareVideoAcceleration } = Settings.store;
     const { launchArguments } = State.store;
 
+    app.commandLine.appendSwitch("disable-features", "WebRtcHWEncoding");
+    app.commandLine.appendSwitch("webrtc-max-cpu-consumption-percentage", "100");
+    app.commandLine.appendSwitch(
+        "force-fieldtrials",
+        "WebRTC-Audio-Red-For-Opus/Enabled/" + "WebRTC-Audio-OpusMinPlaybackRate/Disabled/"
+    );
+
     const enabledFeatures = new Set(app.commandLine.getSwitchValue("enable-features").split(","));
     const disabledFeatures = new Set(app.commandLine.getSwitchValue("disable-features").split(","));
     app.commandLine.removeSwitch("enable-features");
