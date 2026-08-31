@@ -277,9 +277,19 @@ function initDevtoolsListeners(win: BrowserWindow) {
 
 // window title for the static-title setting: distinguish sessions when
 // multiple profiles run side by side
+let windowUsername: string | null = null;
+
+export function setWindowUsername(username: string) {
+    windowUsername = username;
+    if (mainWin && (Settings.store.staticTitle || CommandLine.values.profile)) {
+        mainWin.setTitle(sessionTitle());
+    }
+}
+
 function sessionTitle() {
     const { profile } = CommandLine.values;
-    return profile ? `INFINICORD - PROFILE ${profile}` : "Infinicord";
+    const prefix = windowUsername ? `${windowUsername} - ` : "";
+    return profile ? `${prefix}INFINICORD - PROFILE ${profile}` : `${prefix}Infinicord`;
 }
 
 function initStaticTitle(win: BrowserWindow) {
