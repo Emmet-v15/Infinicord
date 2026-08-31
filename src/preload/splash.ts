@@ -15,5 +15,8 @@ contextBridge.exposeInMainWorld("VesktopSplashNative", {
     },
     onSetProgressVisible(callback: (visible: boolean) => void) {
         ipcRenderer.on("set-splash-progress-visible", (_, visible: boolean) => callback(visible));
+    },
+    onSetIndeterminate(callback: (indeterminate: boolean) => void) {
+        ipcRenderer.on("set-splash-indeterminate", (_, indeterminate: boolean) => callback(indeterminate));
     }
 });

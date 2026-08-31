@@ -2,7 +2,10 @@
 <meta charset="utf-8" />
 
 <head>
+    <title>Infinicord</title>
+
     <link rel="stylesheet" href="./common.css" type="text/css" />
+    <link rel="stylesheet" href="./brand.generated.css" type="text/css" />
 
     <style>
         html,
@@ -14,7 +17,6 @@
         body {
             background: none;
             user-select: none;
-            -webkit-app-region: drag;
             overflow: hidden;
         }
 
@@ -22,82 +24,189 @@
             width: 100%;
             height: 100%;
             box-sizing: border-box;
+            position: relative;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             border-radius: 8px;
             border: 1px solid var(--fg-semi-trans);
-            background: var(--bg);
+            background:
+                radial-gradient(
+                    480px 300px at 50% -12%,
+                    color-mix(in srgb, var(--infinicord-primary) 20%, transparent),
+                    transparent 70%
+                ),
+                var(--bg);
+        }
+
+        /* brand bar along the top edge */
+        .wrapper::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--infinicord-gradient-brand-bar);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .logo-wrap {
+            position: relative;
+            width: 130px;
+            height: 130px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* pulsing halo behind the spinner */
+        .logo-wrap::before {
+            content: "";
+            position: absolute;
+            inset: 8px;
+            border-radius: 50%;
+            background: radial-gradient(
+                circle,
+                color-mix(in srgb, var(--infinicord-primary) 34%, transparent) 0%,
+                transparent 68%
+            );
+            animation: halo 2.6s ease-in-out infinite;
+        }
+
+        @keyframes halo {
+            0%,
+            100% {
+                opacity: 0.55;
+                transform: scale(0.94);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.06);
+            }
+        }
+
+        .logo-wrap img {
+            position: relative;
+            width: 86px;
+            height: 86px;
+            object-fit: contain;
+            /* runtime glow — filter follows the spinning pixels exactly */
+            filter: drop-shadow(0 0 16px color-mix(in srgb, var(--infinicord-primary) 60%, transparent));
+        }
+
+        #wordmark {
+            margin-top: 16px;
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 0.38em;
+            text-indent: 0.38em;
+            background: var(--infinicord-gradient-logo-fill);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .message {
+            margin: 8px 0 0;
+            padding: 0 24px;
+            min-height: 1.3em;
+            font-size: 13px;
+            color: var(--fg-secondary);
+            text-align: center;
+            word-break: break-word;
         }
 
         #progress-section {
             width: 100%;
+            box-sizing: border-box;
+            margin-top: 20px;
+            padding: 0 30px;
+        }
+
+        #progress-percentage {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--fg-secondary);
+            text-align: right;
+            letter-spacing: 0.05em;
         }
 
         .progressbar {
             position: relative;
-            height: 17.5px;
-            width: auto;
+            height: 10px;
             box-sizing: border-box;
-            margin-left: 16px;
-            margin-right: 16px;
-            background-color: color-mix(in srgb, var(--bg), black 20%);
-            border: 1px solid color-mix(in srgb, var(--fg-semi-trans), white 10%);
-            border-radius: 4px;
+            border-radius: 999px;
+            background-color: color-mix(in srgb, var(--bg), black 22%);
+            border: 1px solid var(--fg-semi-trans);
+            overflow: hidden;
         }
 
         .progressbar #progress {
+            position: relative;
             height: 100%;
             width: 0%;
             max-width: 100%;
-            background-color: color-mix(in srgb, var(--fg-semi-trans), black 10%);
-            border-radius: 4px;
-            transition: width 0.5s ease-in;
+            background: var(--infinicord-gradient-brand-bar);
+            border-radius: 999px;
+            transition: width 0.5s ease-in-out;
+            overflow: hidden;
         }
 
-        .progressbar #progress-percentage {
+        /* travelling shine across the filled segment */
+        .progressbar #progress::after {
+            content: "";
             position: absolute;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            font-size: 13px;
-            font-weight: bold;
-            outline: 1px solid var(--fg-semi-trans);
+            inset: 0;
+            background: linear-gradient(100deg, transparent 25%, rgb(255 255 255 / 0.4) 50%, transparent 75%);
+            background-size: 200% 200%;
+            animation: shine 1.8s linear infinite;
         }
 
-        .message {
-            top: 70%;
-            word-break: break-word;
-            padding: 0 16px;
-            position: absolute;
-            font-size: 14px
+        @keyframes shine {
+            from {
+                background-position: 200% 0;
+            }
+            to {
+                background-position: -200% 0;
+            }
         }
 
-        p {
-            text-align: center;
+        /* indeterminate: bar shimmers while we wait on something unmeasurable */
+        .progressbar.indeterminate #progress {
+            width: 100% !important;
+            transition: none;
         }
 
-        img {
-            width: 128px;
-            height: 128px;
-            object-fit: contain;
+        .progressbar.indeterminate #progress::after {
+            animation: sweep 1.4s ease-in-out infinite;
+        }
+
+        @keyframes sweep {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(100%);
+            }
         }
     </style>
 </head>
 
 <body>
     <div class="wrapper">
-        <img draggable="false" src="equibop://assets/splash" alt="" role="presentation" />
-        <p>Loading Equibop...</p>
-        <p class="message"></p>
+        <div class="logo-wrap">
+            <img draggable="false" src="infinicord://assets/splash" alt="" role="presentation" />
+        </div>
+        <div id="wordmark">INFINICORD</div>
+        <p class="message">Loading Infinicord...</p>
 
         <div id="progress-section">
+            <span id="progress-percentage">0%</span>
             <div class="progressbar">
-                <span id="progress-percentage">0%</span>
                 <div id="progress"></div>
             </div>
         </div>
@@ -106,10 +215,22 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
+        // spin the pentagram via the Web Animations API — deterministic,
+        // unaffected by OS animation/reduced-motion settings
+        const logo = document.querySelector(".wrapper img");
+        if (logo) {
+            logo.animate([{ transform: "rotate(0deg)" }, { transform: "rotate(360deg)" }], {
+                duration: 6000,
+                iterations: Infinity,
+                easing: "linear"
+            });
+        }
+
         const messageElement = document.querySelector('.message');
         const progressBar = document.getElementById("progress");
         const progressPercentage = document.getElementById("progress-percentage");
         const progressSection = document.getElementById("progress-section");
+        const progressTrack = progressBar.parentElement;
 
         VesktopSplashNative.onUpdateMessage(message => {
             messageElement.textContent = message;
@@ -120,6 +241,9 @@
         });
         VesktopSplashNative.onSetProgressVisible(visible => {
             progressSection.style.display = visible ? "" : "none";
+        });
+        VesktopSplashNative.onSetIndeterminate(indeterminate => {
+            progressTrack.classList.toggle("indeterminate", indeterminate);
         });
     });
 </script>

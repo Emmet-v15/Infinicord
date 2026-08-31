@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { existsSync } from "fs";
+import { existsSync, rmSync } from "fs";
 import { join } from "path";
 
 import { USER_AGENT } from "../constants";
@@ -50,7 +50,40 @@ export function isValidVencordInstall(dir: string) {
 }
 
 export async function ensureVencordFiles() {
-    if (existsSync(VENCORD_DIR)) return;
+    if (existsSync(VENCORD_DIR)) {
+        if (isValidAsarArchive(VENCORD_DIR)) return;
 
-    await downloadVencordAsar();
+        // e.g. a previous instance was killed mid-download and left a
+        // truncated archive at the real path — never trust it, re-download
+        console.warn("[Infinicord] cached client-mod archive is corrupt — re-downloading");
+        // recursive: the path may also be a leftover extraction directory,
+        // which plain rmSync cannot remove (EISDIR)
+        try {
+            rmSync(VENCORD_DIR, { force: true, recursive: true });
+        } catch (e) {
+            console.error("[Infinicord] Failed to remove corrupt client-mod cache:", e);
+        }
+    }
+
+    try {
+        await downloadVencordAsar();
+    } catch (e) {
+        // never block startup on this — the app runs, just without the mod
+        console.error("[Infinicord] Failed to download client-mod archive:", e);
+    }
+}
+
+/**
+ * Cheap integrity probe: the archive must be parseable by @electron/asar and
+ * contain an entry point. Catches truncated downloads that pass existsSync().
+ */
+function isValidAsarArchive(archivePath: string) {
+    try {
+        const asar = require("@electron/asar") as { extractFile(p: string, f: string): Buffer };
+        asar.extractFile(archivePath, "package.json");
+        return true;
+    } catch (e) {
+        console.warn("[Infinicord] archive validation failed:", e);
+        return false;
+    }
 }

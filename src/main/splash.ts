@@ -34,6 +34,8 @@ function sendToSplash(channel: string, payload: unknown) {
 export async function createSplashWindow(startMinimized = false) {
     splash = new BrowserWindow({
         ...SplashProps,
+        width: 360,
+        height: 420,
         ...(process.platform === "win32"
             ? { icon: join(STATIC_DIR, "icon.ico") }
             : process.platform === "linux"
@@ -48,7 +50,7 @@ export async function createSplashWindow(startMinimized = false) {
     splash.webContents.setMaxListeners(15);
     loadView(splash, "splash.html");
 
-    const { splashBackground, splashColor, splashTheming, splashProgress, splashPixelated } = Settings.store;
+    const { splashBackground, splashColor, splashTheming, splashPixelated } = Settings.store;
 
     const isDark = nativeTheme.shouldUseDarkColors;
     const systemBg = isDark ? "hsl(223 6.7% 20.6%)" : "white";
@@ -91,10 +93,7 @@ export async function createSplashWindow(startMinimized = false) {
         `);
     }
 
-    if (!splashProgress) {
-        sendToSplash("set-splash-progress-visible", false);
-    }
-
+    // the progress bar is unconditional — it doubles as the update UI
     splash.webContents.once("did-finish-load", () => {
         if (!splash || splash.isDestroyed()) return;
         splashReady = true;
@@ -118,6 +117,15 @@ export function addSplashLog() {
     doneTasks++;
     const percentage = Math.min(100, Math.round((doneTasks / totalTasks) * 100));
     sendToSplash("update-splash-progress", percentage);
+}
+
+export function updateSplashProgress(percentage: number) {
+    sendToSplash("set-splash-indeterminate", false);
+    sendToSplash("update-splash-progress", Math.max(0, Math.min(100, Math.round(percentage))));
+}
+
+export function setSplashIndeterminate(indeterminate: boolean) {
+    sendToSplash("set-splash-indeterminate", indeterminate);
 }
 
 export function getSplash() {

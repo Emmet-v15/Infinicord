@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Infinicord
+GenericName=Internet Messenger
+Type=Application
+Exec=infinicord %U
+Icon=org.infinicord.infinicord
+Categories=Network;InstantMessaging;Chat;
+Keywords=discord;vencord;electron;chatinfinicord;
+MimeType=x-scheme-handler/discord;
+StartupWMClass=infinicord

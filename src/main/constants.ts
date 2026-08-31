@@ -8,30 +8,33 @@ import { app } from "electron";
 import { existsSync, mkdirSync } from "fs";
 import { dirname, join } from "path";
 
-import { CommandLine } from "./cli";
+import { baseUserDataPath, CommandLine } from "./cli";
 
-const equibopDir = dirname(process.execPath);
+const infinicordDir = dirname(process.execPath);
 
 export const PORTABLE =
     process.platform === "win32" &&
     !process.execPath.toLowerCase().endsWith("electron.exe") &&
-    !existsSync(join(equibopDir, "Uninstall Equibop.exe"));
+    !existsSync(join(infinicordDir, "Uninstall Infinicord.exe"));
 
+// Shared across all profiles (app settings, state, themes)
 export const DATA_DIR =
-    process.env.EQUICORD_USER_DATA_DIR || (PORTABLE ? join(equibopDir, "Data") : join(app.getPath("userData")));
+    process.env.INFINICORD_USER_DATA_DIR || (PORTABLE ? join(infinicordDir, "Data") : join(baseUserDataPath));
 
 mkdirSync(DATA_DIR, { recursive: true });
 
-export const SESSION_DATA_DIR = join(DATA_DIR, "sessionData");
+// Profile-specific: userData is suffixed when --profile <name> is passed,
+// giving each session its own Discord login, session data and asar cache
+export const SESSION_DATA_DIR = join(app.getPath("userData"), "sessionData");
 app.setPath("sessionData", SESSION_DATA_DIR);
 
-export const VENCORD_SETTINGS_DIR = join(DATA_DIR, "settings");
+export const VENCORD_SETTINGS_DIR = join(app.getPath("userData"), "settings");
 mkdirSync(VENCORD_SETTINGS_DIR, { recursive: true });
 export const VENCORD_QUICKCSS_FILE = join(VENCORD_SETTINGS_DIR, "quickCss.css");
 export const VENCORD_SETTINGS_FILE = join(VENCORD_SETTINGS_DIR, "settings.json");
 export const VENCORD_THEMES_DIR = join(DATA_DIR, "themes");
 
-export const USER_AGENT = `Equibop/${app.getVersion()} (https://github.com/Equicord/Equibop)`;
+export const USER_AGENT = `Infinicord/${app.getVersion()} (https://github.com/Emmet-v15/Infinicord)`;
 
 // dimensions shamelessly stolen from Discord Desktop :3
 export const MIN_WIDTH = 940;

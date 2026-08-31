@@ -17,10 +17,10 @@ export const DeveloperOptionsButton: SettingsComponent = ({ settings }) => {
 
 function openDeveloperOptionsModal(settings: Settings) {
     openModal(props => (
-        <Modal {...props} size="md" title="Equibop Developer Options">
+        <Modal {...props} size="md" title="Infinicord Developer Options">
             <div style={{ padding: "1em 0" }}>
-                <Heading tag="h5">Equicord Location</Heading>
-                <EquicordLocationPicker settings={settings} />
+                <Heading tag="h5">Infinicord Location</Heading>
+                <InfinicordLocationPicker settings={settings} />
 
                 <Heading tag="h5" className={Margins.top16}>
                     Debugging
@@ -36,15 +36,15 @@ function openDeveloperOptionsModal(settings: Settings) {
     ));
 }
 
-const EquicordLocationPicker: SettingsComponent = ({ settings }) => {
+const InfinicordLocationPicker: SettingsComponent = ({ settings }) => {
     const forceUpdate = useForceUpdater();
-    const usingCustomEquicordDir = VesktopNative.fileManager.isUsingCustomVencordDir();
+    const usingCustomInfinicordDir = VesktopNative.fileManager.isUsingCustomVencordDir();
 
     return (
         <>
             <Paragraph>
-                Equicord files are loaded from{" "}
-                {usingCustomEquicordDir ? (
+                Infinicord files are loaded from{" "}
+                {usingCustomInfinicordDir ? (
                     <TextButton
                         variant="link"
                         onClick={e => {
@@ -62,13 +62,13 @@ const EquicordLocationPicker: SettingsComponent = ({ settings }) => {
                 <Button
                     size={"small"}
                     onClick={async () => {
-                        const choice = await VesktopNative.fileManager.selectEquicordDir();
+                        const choice = await VesktopNative.fileManager.selectInfinicordDir();
                         switch (choice) {
                             case "cancelled":
                                 break;
                             case "ok":
                                 Toasts.show({
-                                    message: "Equicord install changed. Fully restart Equibop to apply.",
+                                    message: "Infinicord install changed. Fully restart Infinicord to apply.",
                                     id: Toasts.genId(),
                                     type: Toasts.Type.SUCCESS
                                 });
@@ -76,7 +76,7 @@ const EquicordLocationPicker: SettingsComponent = ({ settings }) => {
                             case "invalid":
                                 Toasts.show({
                                     message:
-                                        "You did not choose a valid Equicord install. Make sure you're selecting the dist dir!",
+                                        "You did not choose a valid Infinicord install. Make sure you're selecting the dist dir!",
                                     id: Toasts.genId(),
                                     type: Toasts.Type.FAILURE
                                 });
@@ -91,7 +91,7 @@ const EquicordLocationPicker: SettingsComponent = ({ settings }) => {
                     size={"small"}
                     variant="dangerPrimary"
                     onClick={async () => {
-                        await VesktopNative.fileManager.selectEquicordDir(null);
+                        await VesktopNative.fileManager.selectInfinicordDir(null);
                         forceUpdate();
                     }}
                 >

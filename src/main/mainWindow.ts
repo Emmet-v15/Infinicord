@@ -85,25 +85,25 @@ function initMenuBar(win: BrowserWindow) {
 
     const subMenu = [
         {
-            label: "About Equibop",
+            label: "About Infinicord",
             click: createAboutWindow
         },
         {
-            label: "Force Update Equicord",
+            label: "Force Update Infinicord",
             async click() {
                 await downloadVencordAsar();
                 destroyTray();
                 app.relaunch();
                 app.quit();
             },
-            toolTip: "Equibop will automatically restart after this operation"
+            toolTip: "Infinicord will automatically restart after this operation"
         },
         {
-            label: "Reset Equibop",
+            label: "Reset Infinicord",
             async click() {
                 await clearData(win);
             },
-            toolTip: "Equibop will automatically restart after this operation"
+            toolTip: "Infinicord will automatically restart after this operation"
         },
         {
             label: "Relaunch",
@@ -171,7 +171,7 @@ function initMenuBar(win: BrowserWindow) {
 
     const menuItems = [
         {
-            label: "Equibop",
+            label: "Infinicord",
             role: "appMenu",
             submenu: subMenu.filter(isTruthy)
         },
@@ -246,7 +246,9 @@ function initSettingsListeners(win: BrowserWindow) {
 }
 
 async function initSpellCheckLanguages(_win: BrowserWindow, languages?: string[]) {
-    languages ??= await sendRendererCommand(IpcCommands.GET_LANGUAGES);
+    // the renderer may never answer (e.g. page failed to load) — fall back
+    // to nothing instead of leaving an unhandled rejection behind
+    languages ??= (await sendRendererCommand<string[]>(IpcCommands.GET_LANGUAGES).catch(() => null)) ?? undefined;
     if (!languages) return;
 
     const ses = session.defaultSession;
@@ -273,14 +275,24 @@ function initDevtoolsListeners(win: BrowserWindow) {
     });
 }
 
+// window title for the static-title setting: distinguish sessions when
+// multiple profiles run side by side
+function sessionTitle() {
+    const { profile } = CommandLine.values;
+    return profile ? `INFINICORD - PROFILE ${profile}` : "Infinicord";
+}
+
 function initStaticTitle(win: BrowserWindow) {
     const listener = (e: { preventDefault: Function }) => e.preventDefault();
+    const { profile } = CommandLine.values;
 
-    if (Settings.store.staticTitle) win.on("page-title-updated", listener);
+    // profile sessions always keep a constant title so side-by-side windows
+    // are distinguishable, even without the static-title setting
+    if (Settings.store.staticTitle || profile) win.on("page-title-updated", listener);
 
     addSettingsListener("staticTitle", enabled => {
-        if (enabled) {
-            win.setTitle("Equibop");
+        if (enabled || profile) {
+            win.setTitle(sessionTitle());
             win.on("page-title-updated", listener);
         } else {
             win.off("page-title-updated", listener);
@@ -375,8 +387,8 @@ function buildBrowserWindowOptions(): BrowserWindowConstructorOptions {
         }
     }
 
-    if (staticTitle) {
-        options.title = "Equibop";
+    if (staticTitle || CommandLine.values.profile) {
+        options.title = sessionTitle();
     }
 
     if (process.platform === "darwin") {

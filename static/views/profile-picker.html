@@ -1,0 +1,243 @@
+<!doctype html>
+<meta charset="utf-8" />
+
+<head>
+    <title>Infinicord</title>
+
+    <link rel="stylesheet" href="./common.css" type="text/css" />
+    <link rel="stylesheet" href="./brand.generated.css" type="text/css" />
+
+    <style>
+        body {
+            height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 32px;
+            background:
+                radial-gradient(900px 420px at 50% -8%, color-mix(in srgb, var(--infinicord-primary) 16%, transparent), transparent 70%),
+                var(--bg);
+            user-select: none;
+            overflow: hidden;
+        }
+
+        #drag {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 20%;
+            -webkit-app-region: drag;
+            z-index: 10;
+        }
+
+        #top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #brand img {
+            width: 34px;
+            height: 34px;
+        }
+
+        #brand span {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.35em;
+            color: var(--fg);
+        }
+
+        #close {
+            position: relative;
+            z-index: 11;
+            -webkit-app-region: no-drag;
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--fg-secondary);
+            font-size: 20px;
+            line-height: 1;
+            cursor: pointer;
+            transition: 150ms background;
+        }
+
+        #close:hover {
+            background: color-mix(in srgb, var(--fg) 12%, transparent);
+            color: var(--fg);
+        }
+
+        #main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 28px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        #tiles {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 22px;
+            max-width: 100%;
+        }
+
+        .tile-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tile {
+            box-sizing: border-box;
+            width: 96px;
+            height: 96px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 6px;
+            background: color-mix(in srgb, var(--fg) 7%, transparent);
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: 150ms border-color, 150ms box-shadow, 150ms filter;
+        }
+
+        .tile:hover {
+            border-color: color-mix(in srgb, var(--infinicord-primary) 55%, transparent);
+            filter: brightness(1.25);
+        }
+
+        .tile.selected {
+            border-color: var(--infinicord-primary);
+            box-shadow: 0 0 14px color-mix(in srgb, var(--infinicord-primary) 45%, transparent);
+        }
+
+        .tile img {
+            width: 52px;
+            height: 52px;
+        }
+
+        .tile .num {
+            font-size: 34px;
+            font-weight: 700;
+            background: var(--infinicord-gradient-logo-fill);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .tile.add {
+            background: transparent;
+            border: 1px dashed var(--fg-semi-trans);
+            color: var(--fg);
+            font-size: 40px;
+            font-weight: 300;
+        }
+
+        .tile-wrap small {
+            font-size: 12px;
+            color: var(--fg-secondary);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="drag"></div>
+    <div id="top">
+        <div id="brand">
+            <img draggable="false" src="./brand-splash.svg" alt="" />
+            <span>INFINICORD</span>
+        </div>
+        <button id="close" title="Quit">&#10005;</button>
+    </div>
+
+    <div id="main">
+        <h1>Who's chatting?</h1>
+        <div id="tiles"></div>
+    </div>
+</body>
+
+<script>
+    const params = new URLSearchParams(location.search);
+    const profiles = (params.get("profiles") ?? "")
+        .split(",")
+        .map(Number)
+        .filter(n => Number.isInteger(n) && n >= 1);
+    const canAdd = params.get("canAdd") === "1";
+    const last = params.get("last") ?? "default";
+
+    const tiles = document.getElementById("tiles");
+
+    function addTile({ value, caption, content }) {
+        const wrap = document.createElement("div");
+        wrap.className = "tile-wrap";
+
+        const tile = document.createElement("div");
+        tile.className = "tile" + (value === last ? " selected" : "");
+        tile.appendChild(content);
+        tile.onclick = () => console.info("picked:" + value);
+        wrap.appendChild(tile);
+
+        const label = document.createElement("small");
+        label.textContent = caption;
+        wrap.appendChild(label);
+
+        tiles.appendChild(wrap);
+    }
+
+    // Default tile — brand glyph
+    {
+        const img = document.createElement("img");
+        img.draggable = false;
+        img.src = "./brand-splash.svg";
+        img.alt = "";
+        addTile({ value: "default", caption: "Default", content: img });
+    }
+
+    // Numbered profile tiles
+    for (const n of profiles) {
+        const num = document.createElement("span");
+        num.className = "num";
+        num.textContent = String(n);
+        addTile({ value: String(n), caption: `Profile ${n}`, content: num });
+    }
+
+    // Add-new tile
+    if (canAdd) {
+        const plus = document.createElement("span");
+        plus.textContent = "+";
+        addTile({ value: "add", caption: "Add profile", content: plus });
+        const addTileEl = tiles.lastElementChild.querySelector(".tile");
+        addTileEl.classList.add("add");
+        addTileEl.onclick = () => console.info("addnew");
+    }
+
+    close.onclick = () => console.info("cancel");
+    document.addEventListener("keydown", e => {
+        if (e.key === "Escape") console.info("cancel");
+        if (e.key === "Enter") {
+            const selected = tiles.querySelector(".tile.selected");
+            if (selected) selected.click();
+        }
+    });
+</script>

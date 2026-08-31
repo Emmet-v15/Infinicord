@@ -1,11 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256">
-  <linearGradient id="d" y1="12.5%" x2="0%" x1="0%" y2="87.5%" gradientUnits="userSpaceOnUse">
-    <stop stop-color="#404040" />
-    <stop stop-color="#2c2c2c" offset="1" />
-  </linearGradient>
-  <circle r="32.3" cx="128" cy="128" fill="url(#d)" />
-  <line x2="201" stroke="url(#d)" y2="95" x1="128" y1="128" stroke-width="28" />
-  <circle r="80" cx="128" cy="128" fill="none" stroke="#595a5a" stroke-width="35" />
-  <circle r="80" cx="128" cy="128" fill="none" stroke="url(#d)" stroke-width="35.5" stroke-linecap="round" stroke-dasharray="59 218 999" />
-  <line x2="128" stroke="#595a5a" y2="128" x1="55" y1="161" stroke-width="28" stroke-linecap="round" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6D28D9"/>
+      <stop offset="1" stop-color="#4C1D95"/>
+    </linearGradient>
+    <linearGradient id="star" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A78BFA"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="url(#tile)"/>
+  <polygon points="128.0,202.0 57.6,150.9 84.5,68.1 171.5,68.1 198.4,150.9" fill="#4C1D95" stroke="url(#star)" stroke-width="4"/>
+  <polygon points="128.0,202.0 84.5,68.1 198.4,150.9 57.6,150.9 171.5,68.1" fill="none" stroke="url(#star)" stroke-width="7"
+           stroke-linejoin="miter" stroke-linecap="butt"/>
 </svg>

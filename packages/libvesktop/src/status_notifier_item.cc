@@ -179,7 +179,7 @@ GVariant *StatusNotifierItem::handle_get_property(
     }
     else if (g_strcmp0(property_name, "Id") == 0)
     {
-        return g_variant_new_string("equibop");
+        return g_variant_new_string("infinicord");
     }
     else if (g_strcmp0(property_name, "Title") == 0)
     {
@@ -229,7 +229,7 @@ GVariant *StatusNotifierItem::handle_get_property(
     {
         GVariantBuilder builder;
         g_variant_builder_init(&builder, G_VARIANT_TYPE("(sa(iiay)ss)"));
-        g_variant_builder_add(&builder, "s", "equibop");
+        g_variant_builder_add(&builder, "s", "infinicord");
         g_variant_builder_open(&builder, G_VARIANT_TYPE("a(iiay)"));
         g_variant_builder_close(&builder);
         g_variant_builder_add(&builder, "s", self->current_title.c_str());
@@ -537,7 +537,7 @@ StatusNotifierItem::StatusNotifierItem()
         return;
     }
 
-    service_name = "org.equicord.equibop.StatusNotifierItem";
+    service_name = "org.infinicord.infinicord.StatusNotifierItem";
     object_path = "/StatusNotifierItem";
 }
 
@@ -919,7 +919,7 @@ void StatusNotifierItem::on_name_lost(
     self->name_owned = false;
     self->registered_with_watcher = false;
     std::cerr << "[libvesktop] Lost ownership of bus name '" << (name ? name : "")
-              << "' (likely another Equibop instance took over). Tray events will stop reaching this process."
+              << "' (likely another Infinicord instance took over). Tray events will stop reaching this process."
               << std::endl;
 }
 

@@ -10,6 +10,13 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    background:
+        radial-gradient(
+            700px 340px at 50% -10%,
+            color-mix(in srgb, var(--infinicord-primary) 16%, transparent),
+            transparent 70%
+        ),
+        var(--bg);
 
     header,
     footer {
@@ -27,6 +34,25 @@ body {
     }
 }
 
+#brand {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0.75em;
+}
+
+#brand img {
+    width: 34px;
+    height: 34px;
+}
+
+#brand span {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.35em;
+    color: var(--fg);
+}
 
 #versions {
     display: inline-grid;
@@ -42,11 +68,12 @@ body {
     }
 
     #current-version {
-        color: #fc8f8a;
+        color: var(--fg-secondary);
     }
 
     #new-version {
-        color: #71c07f;
+        color: var(--infinicord-primary-light);
+        font-weight: 600;
     }
 }
 
@@ -67,22 +94,25 @@ button {
     font-size: 1.2em;
     color: var(--fg);
     border: none;
-    border-radius: 3px;
+    border-radius: 6px;
     font-weight: bold;
-    transition: filter 0.2 ease-in-out;
+    transition:
+        filter 0.2s ease-in-out,
+        opacity 0.2s ease-in-out;
 }
 
 button:hover,
 button:active {
-    filter: brightness(0.9);
+    filter: brightness(0.85);
 }
 
-.green {
-    background-color: #248046;
+.primary {
+    background: var(--infinicord-gradient-brand-bar);
+    color: var(--infinicord-on-primary);
 }
 
-.grey {
-    background-color: rgba(151, 151, 159, 0.12);
+.secondary {
+    background-color: color-mix(in srgb, var(--fg) 12%, transparent);
 }
 
 .hidden {
@@ -109,12 +139,33 @@ h2 {
 dialog {
     width: 80%;
     padding: 2em;
+    border: 1px solid var(--fg-semi-trans);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--fg);
+}
+
+dialog::backdrop {
+    background: rgb(0 0 0 / 0.5);
 }
 
 progress {
     width: 100%;
-    height: 1.5em;
+    height: 10px;
     margin-top: 1em;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+progress::-webkit-progress-bar {
+    background-color: color-mix(in srgb, var(--bg), black 22%);
+    border-radius: 999px;
+}
+
+progress::-webkit-progress-value {
+    background: var(--infinicord-gradient-brand-bar);
+    border-radius: 999px;
+    transition: width 0.3s ease-in-out;
 }
 
 #error {
@@ -132,7 +183,7 @@ progress {
 .spinner {
     width: 48px;
     height: 48px;
-    border: 5px solid var(--fg);
+    border: 5px solid var(--infinicord-primary);
     border-bottom-color: transparent;
     border-radius: 50%;
     display: inline-block;

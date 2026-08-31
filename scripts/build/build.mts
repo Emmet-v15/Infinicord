@@ -10,8 +10,12 @@ import { copyFile } from "fs/promises";
 
 import vencordDep from "./vencordDep.mjs";
 import { includeDirPlugin } from "./includeDirPlugin.mts";
+import { generateBrand } from "./genBrand.mts";
 
 const isDev = process.argv.includes("--dev");
+
+// derive every brand artifact (css vars, splash logo, icons) from rebrand/palette.json
+await generateBrand();
 
 let gitHash: string;
 try {
@@ -31,14 +35,14 @@ const NodeCommonOpts: BuildOptions = {
     ...CommonOpts,
     format: "cjs",
     platform: "node",
-    external: ["electron", "original-fs"],
+    external: ["electron", "original-fs", "@electron/asar"],
     target: ["esnext"],
     loader: {
         ".node": "file"
     },
     define: {
         IS_DEV: JSON.stringify(isDev),
-        EQUIBOP_GIT_HASH: JSON.stringify(gitHash)
+        INFINICORD_GIT_HASH: JSON.stringify(gitHash)
     }
 };
 
@@ -117,7 +121,7 @@ await Promise.all([
     }),
     createContext({
         ...CommonOpts,
-        globalName: "Equibop",
+        globalName: "Infinicord",
         entryPoints: ["src/renderer/index.ts"],
         outfile: "dist/js/renderer.js",
         format: "iife",

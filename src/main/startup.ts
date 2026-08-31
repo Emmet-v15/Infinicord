@@ -4,25 +4,26 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import "./updater";
 import "./ipc";
 import "./userAssets";
 import "./vesktopProtocol";
 
 import { app, BrowserWindow, nativeTheme } from "electron";
 
+import { CommandLine } from "./cli";
 import { DATA_DIR } from "./constants";
-import { createFirstLaunchTour } from "./firstLaunch";
 import { createWindows } from "./mainWindow";
 import { registerMediaPermissionsHandler } from "./mediaPermissions";
+import { createProfilePicker, shouldShowProfilePicker } from "./profilePicker";
 import { registerScreenShareHandler } from "./screenShare";
 import { Settings, State } from "./settings";
+import { startBootUpdateCheck } from "./updater";
 import { setAsDefaultProtocolClient } from "./utils/setAsDefaultProtocolClient";
 import { isDeckGameMode } from "./utils/steamOS";
 
-console.log("Equibop v" + app.getVersion());
+console.log("Infinicord v" + app.getVersion());
 
-process.env.EQUICORD_USER_DATA_DIR = DATA_DIR;
+process.env.INFINICORD_USER_DATA_DIR = DATA_DIR;
 
 const isLinux = process.platform === "linux";
 
@@ -65,6 +66,12 @@ function init() {
     app.commandLine.appendSwitch("disable-renderer-backgrounding");
     app.commandLine.appendSwitch("disable-background-timer-throttling");
     app.commandLine.appendSwitch("disable-backgrounding-occluded-windows");
+
+    // Infinicord opus voice enhancement: RED (redundant opus frames) on, playback-rate stretching off
+    app.commandLine.appendSwitch(
+        "force-fieldtrials",
+        "WebRTC-Audio-Red-For-Opus/Enabled/" + "WebRTC-Audio-OpusMinPlaybackRate/Disabled/"
+    );
     if (process.platform === "win32") {
         disabledFeatures.add("CalculateNativeWinOcclusion");
     }
@@ -122,7 +129,11 @@ function init() {
     if (isDeckGameMode) nativeTheme.themeSource = "dark";
 
     app.whenReady().then(async () => {
-        if (process.platform === "win32") app.setAppUserModelId("org.equicord.equibop");
+        if (process.platform === "win32") {
+            // per-profile AppUserModelId: separate taskbar/identity per session
+            const profileSuffix = CommandLine.values.profile ? `.${CommandLine.values.profile}` : "";
+            app.setAppUserModelId(`org.infinicord.infinicord${profileSuffix}`);
+        }
 
         registerScreenShareHandler();
         registerMediaPermissionsHandler();
@@ -138,8 +149,11 @@ function init() {
 init();
 
 async function bootstrap() {
-    if (!Object.hasOwn(State.store, "firstLaunch")) {
-        createFirstLaunchTour();
+    // Discord-style: the splash owns update progress from the first frame
+    startBootUpdateCheck();
+
+    if (shouldShowProfilePicker()) {
+        createProfilePicker();
     } else {
         createWindows();
     }

@@ -7,6 +7,7 @@
 import type { Node } from "@vencord/venmic";
 import { ipcRenderer } from "electron/renderer";
 import type { IpcMessage, IpcResponse } from "main/ipcCommands";
+import type { SessionsState } from "main/utils/profiles";
 import type { Settings } from "shared/settings";
 
 import { IpcEvents } from "../shared/IpcEvents";
@@ -65,7 +66,7 @@ export const VesktopNative = {
     fileManager: {
         isUsingCustomVencordDir: () => sendSync<boolean>(IpcEvents.IS_USING_CUSTOM_VENCORD_DIR),
         showCustomVencordDir: () => invoke<void>(IpcEvents.SHOW_CUSTOM_VENCORD_DIR),
-        selectEquicordDir: (value?: null) =>
+        selectInfinicordDir: (value?: null) =>
             invoke<"cancelled" | "invalid" | "ok">(IpcEvents.SELECT_VENCORD_DIR, value),
         chooseUserAsset: (asset: string, value?: null) =>
             invoke<"cancelled" | "invalid" | "ok" | "failed">(IpcEvents.CHOOSE_USER_ASSET, asset, value)
@@ -73,6 +74,11 @@ export const VesktopNative = {
     settings: {
         get: () => sendSync<Settings>(IpcEvents.GET_SETTINGS),
         set: (settings: Settings, path?: string) => invoke<void>(IpcEvents.SET_SETTINGS, settings, path)
+    },
+    sessions: {
+        getState: () => invoke<SessionsState>(IpcEvents.PROFILES_GET_STATE),
+        setCount: (count: number) => invoke<number[]>(IpcEvents.PROFILES_SET_COUNT, count),
+        launch: (n: number) => invoke<boolean>(IpcEvents.PROFILES_LAUNCH_SESSION, n)
     },
     spellcheck: {
         getAvailableLanguages: () => sendSync<string[]>(IpcEvents.SPELLCHECK_GET_AVAILABLE_LANGUAGES),

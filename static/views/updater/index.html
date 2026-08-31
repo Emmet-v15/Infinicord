@@ -2,19 +2,25 @@
 <meta charset="utf-8" />
 
 <head>
-    <title>Equibop Updater</title>
+    <title>Infinicord Updater</title>
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'none';
-        script-src equibop:;
-        style-src equibop:;
+        script-src infinicord:;
+        style-src infinicord:;
+        img-src infinicord:;
       ">
 
     <link rel="stylesheet" href="../common.css" type="text/css" />
+    <link rel="stylesheet" href="../brand.generated.css" type="text/css" />
     <link rel="stylesheet" href="./style.css" type="text/css" />
 </head>
 
 <body>
     <header>
+        <div id="brand">
+            <img draggable="false" src="../brand-splash.svg" alt="" />
+            <span>INFINICORD</span>
+        </div>
         <h1>An update is available!</h1>
     </header>
 
@@ -30,9 +36,9 @@
 
     <footer>
         <section id="buttons">
-            <button id="update-button" class="green">Install update & restart</button>
-            <button id="later-button" class="grey">Remind me later</button>
-            <button id="ignore-button" class="grey">Ignore this update</button>
+            <button id="update-button" class="primary">Install update &amp; restart</button>
+            <button id="later-button" class="secondary">Remind me later</button>
+            <button id="ignore-button" class="secondary">Ignore this update</button>
         </section>
     </footer>
 
@@ -40,7 +46,7 @@
         <h2>Downloading Update</h2>
         <p>
             Please wait while the update is being downloaded. Once the update finished downloading, it will
-            automatically install and Equibop will restart.
+            automatically install and Infinicord will restart.
         </p>
 
         <p id="linux-note" class="hidden">You will likely be prompted to enter your password. Do so to finish the
@@ -53,7 +59,7 @@
 
     <dialog id="installing-dialog" closedby="none">
         <h2>Installing Update</h2>
-        <p>Please wait while the update is being installed. Equibop will restart shortly.</p>
+        <p>Please wait while the update is being installed. Infinicord will restart shortly.</p>
 
         <div class="spinner-wrapper">
             <div class="spinner"></div>

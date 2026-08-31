@@ -5,3 +5,9 @@ node_modules
 .idea/
 .zed
 resources
+rebrand/**
+
+# generated brand artifacts (see scripts/build/genBrand.mts)
+src/renderer/styles/brand.generated.css
+static/views/brand.generated.css
+static/views/brand-splash.svg

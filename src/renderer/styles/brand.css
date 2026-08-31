@@ -1,0 +1,20 @@
+/*
+ * Infinicord brand theming, applied on top of the client mod's own UI.
+ * Color values come from --infinicord-* variables defined in
+ * brand.generated.css (generated from rebrand/palette.json at build time).
+ */
+
+/* The client mod's update notices render as green bars
+   (.vc-notice-container-positive). Brand them is purple, so repaint it. */
+.vc-notice-container-positive {
+    background: var(--infinicord-gradient-brand-bar) !important;
+    color: var(--infinicord-on-primary) !important;
+}
+
+.vc-notice-container-positive .vc-notice-text {
+    color: var(--infinicord-on-primary) !important;
+}
+
+.vc-notice-container-positive .vc-notice-action {
+    color: var(--infinicord-primary-light) !important;
+}

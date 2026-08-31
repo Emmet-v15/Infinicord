@@ -17,6 +17,7 @@ export interface Settings {
     tray?: boolean;
     minimizeToTray?: boolean;
     autoStartMinimized?: boolean;
+    askProfileOnLaunch?: boolean;
     middleClickAutoscroll?: boolean;
     openLinksWithElectron?: boolean;
     staticTitle?: boolean;
@@ -67,12 +68,12 @@ export interface State {
     minimized?: boolean;
     windowBounds?: Rectangle;
 
-    firstLaunch?: boolean;
+    lastProfile?: "default" | number;
 
     steamOSLayoutVersion?: number;
     linuxAutoStartEnabled?: boolean;
 
-    equicordDir?: string;
+    infinicordDir?: string;
 
     launchArguments?: string;
 

@@ -18,6 +18,7 @@ import { DeveloperOptionsButton } from "./DeveloperOptions";
 import { DiscordBranchPicker } from "./DiscordBranchPicker";
 import { NotificationBadgeToggle } from "./NotificationBadgeToggle";
 import { OutdatedVesktopWarning } from "./OutdatedVesktopWarning";
+import { SessionsManager } from "./SessionsManager";
 import { Updater } from "./Updater";
 import { UserAssetsButton } from "./UserAssets";
 import { VesktopSettingsSwitch } from "./VesktopSettingsSwitch";
@@ -66,7 +67,7 @@ const SettingsOptions: Record<string, Array<BooleanSetting | SettingsComponent>>
         {
             key: "staticTitle",
             title: "Static Title",
-            description: 'Makes the window title "Equibop" instead of changing to the current page',
+            description: 'Makes the window title "Infinicord" instead of changing to the current page',
             defaultValue: false
         },
         {
@@ -80,7 +81,7 @@ const SettingsOptions: Record<string, Array<BooleanSetting | SettingsComponent>>
             key: "enableSplashScreen",
             title: "Enable Splash Screen",
             description:
-                "Shows a small splash screen while Equibop is loading. Disabling this option will show the main window earlier while it's still loading.",
+                "Shows a small splash screen while Infinicord is loading. Disabling this option will show the main window earlier while it's still loading.",
             defaultValue: true
         },
         {
@@ -102,14 +103,14 @@ const SettingsOptions: Record<string, Array<BooleanSetting | SettingsComponent>>
         {
             key: "tray",
             title: "Tray Icon",
-            description: "Add a tray icon for Equibop",
+            description: "Add a tray icon for Infinicord",
             defaultValue: true,
             invisible: () => isMac
         },
         {
             key: "minimizeToTray",
             title: "Minimize to tray",
-            description: "Hitting X will make Equibop minimize to the tray instead of closing",
+            description: "Hitting X will make Infinicord minimize to the tray instead of closing",
             defaultValue: true,
             invisible: () => isMac,
             disabled: () => Settings.store.tray === false
@@ -117,7 +118,7 @@ const SettingsOptions: Record<string, Array<BooleanSetting | SettingsComponent>>
         {
             key: "clickTrayToShowHide",
             title: "Hide/Show on tray click",
-            description: "Left clicking tray icon will toggle the Equibop window visibility.",
+            description: "Left clicking tray icon will toggle the Infinicord window visibility.",
             defaultValue: false
         },
         {
@@ -153,12 +154,13 @@ const SettingsOptions: Record<string, Array<BooleanSetting | SettingsComponent>>
         {
             key: "openLinksWithElectron",
             title: "Open Links in app (experimental)",
-            description: "Opens links in a new Equibop window instead of your web browser",
+            description: "Opens links in a new Infinicord window instead of your web browser",
             defaultValue: false
         },
         WebRTCIPHandlingPolicyPicker
     ],
-    "Developer Options": [DeveloperOptionsButton]
+    "Developer Options": [DeveloperOptionsButton],
+    Sessions: [SessionsManager]
 };
 
 function SettingsSections() {
@@ -209,6 +211,6 @@ export default ErrorBoundary.wrap(
     },
     {
         message:
-            "Failed to render the Equibop Settings tab. If this issue persists, try to right click the Equibop tray icon, then click 'Repair Equicord'. And make sure your Equibop is up to date."
+            "Failed to render the Infinicord Settings tab. If this issue persists, try to right click the Infinicord tray icon, then click 'Repair Infinicord'. And make sure your Infinicord is up to date."
     }
 );

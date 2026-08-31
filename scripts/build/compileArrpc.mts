@@ -44,6 +44,12 @@ const TARGETS: CompileTarget[] = [
 		arch: "x64",
 		target: "bun-windows-x64-baseline",
 		output: "arrpc-windows-x64.exe"
+	},
+	{
+		platform: "windows",
+		arch: "arm64",
+		target: "bun-windows-arm64",
+		output: "arrpc-windows-arm64.exe"
 	}
 ];
 
@@ -65,15 +71,15 @@ const currentPlatform = process.platform === "win32" ? "windows" : process.platf
 const currentArch = process.arch === "x64" ? "x64" : process.arch === "arm64" ? "arm64" : process.arch;
 
 let targetsToCompile = TARGETS;
-if (isCI) {
-	targetsToCompile = TARGETS.filter(t => t.platform === currentPlatform);
-	console.log(`Running in CI on ${currentPlatform}, compiling only for current platform...`);
-} else if (currentPlatform === "darwin") {
+if (currentPlatform === "darwin") {
 	targetsToCompile = TARGETS.filter(t => t.platform === currentPlatform);
 	console.log(`Compiling arRPC binaries for macOS universal build: x64 and arm64`);
-} else {
+} else if (isCI) {
 	targetsToCompile = TARGETS.filter(t => t.platform === currentPlatform && t.arch === currentArch);
-	console.log(`Compiling arRPC binary for current machine: ${currentPlatform}-${currentArch}`);
+	console.log(`Running in CI on ${currentPlatform}-${currentArch}, compiling only for current arch...`);
+} else {
+	targetsToCompile = TARGETS.filter(t => t.platform === currentPlatform);
+	console.log(`Compiling arRPC binaries for ${currentPlatform}: ${targetsToCompile.map(t => t.arch).join(", ")}`);
 }
 
 console.log(`Source: ${ARRPC_ENTRY}`);

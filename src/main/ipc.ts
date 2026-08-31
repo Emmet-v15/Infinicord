@@ -38,17 +38,27 @@ import { Settings, State } from "./settings";
 import { enableHardwareAcceleration } from "./startup";
 import { handle, handleSync } from "./utils/ipcWrappers";
 import { PopoutWindows } from "./utils/popout";
+import { getSessionsState, launchSession, setSessionCount } from "./utils/profiles";
 import { isDeckGameMode, showGamePage } from "./utils/steamOS";
 import { isValidVencordInstall } from "./utils/vencordLoader";
+import { rebrandClientMod } from "./utils/vencordRebrand";
 import { VENCORD_DIR } from "./vencordDir";
 
-handleSync(IpcEvents.GET_VENCORD_PRELOAD_SCRIPT, () => readFileSync(join(VENCORD_DIR, "preload.js"), "utf-8"));
-handleSync(IpcEvents.GET_VENCORD_RENDERER_SCRIPT, () => readFileSync(join(VENCORD_DIR, "renderer.js"), "utf-8"));
+handleSync(IpcEvents.GET_VENCORD_PRELOAD_SCRIPT, () =>
+    rebrandClientMod(readFileSync(join(VENCORD_DIR, "preload.js"), "utf-8"))
+);
+handleSync(IpcEvents.GET_VENCORD_RENDERER_SCRIPT, () =>
+    rebrandClientMod(readFileSync(join(VENCORD_DIR, "renderer.js"), "utf-8"))
+);
 
 const VESKTOP_RENDERER_JS_PATH = join(__dirname, "renderer.js");
 const VESKTOP_RENDERER_CSS_PATH = join(__dirname, "renderer.css");
 handleSync(IpcEvents.GET_VESKTOP_RENDERER_SCRIPT, () => readFileSync(VESKTOP_RENDERER_JS_PATH, "utf-8"));
 handle(IpcEvents.GET_VESKTOP_RENDERER_CSS, () => readFile(VESKTOP_RENDERER_CSS_PATH, "utf-8"));
+
+handle(IpcEvents.PROFILES_GET_STATE, () => getSessionsState());
+handle(IpcEvents.PROFILES_SET_COUNT, (_e, count: number) => setSessionCount(count));
+handle(IpcEvents.PROFILES_LAUNCH_SESSION, (_e, n: number) => launchSession(n));
 
 if (IS_DEV) {
     watch(VESKTOP_RENDERER_CSS_PATH, { persistent: false }, async () => {
@@ -61,7 +71,7 @@ if (IS_DEV) {
 
 handleSync(IpcEvents.GET_SETTINGS, () => Settings.plain);
 handleSync(IpcEvents.GET_VERSION, () => app.getVersion());
-handleSync(IpcEvents.GET_GIT_HASH, () => EQUIBOP_GIT_HASH);
+handleSync(IpcEvents.GET_GIT_HASH, () => INFINICORD_GIT_HASH);
 handleSync(IpcEvents.GET_ENABLE_HARDWARE_ACCELERATION, () => enableHardwareAcceleration);
 
 handleSync(
@@ -100,15 +110,15 @@ handle(IpcEvents.RELAUNCH, async () => {
     app.exit();
 });
 
-handleSync(IpcEvents.IS_USING_CUSTOM_VENCORD_DIR, () => !!State.store.equicordDir);
+handleSync(IpcEvents.IS_USING_CUSTOM_VENCORD_DIR, () => !!State.store.infinicordDir);
 handle(IpcEvents.SHOW_CUSTOM_VENCORD_DIR, async () => {
-    const { equicordDir } = State.store;
-    if (!equicordDir) return;
+    const { infinicordDir } = State.store;
+    if (!infinicordDir) return;
 
-    const stats = await stat(equicordDir);
+    const stats = await stat(infinicordDir);
     if (!stats.isDirectory()) return;
 
-    shell.openPath(equicordDir);
+    shell.openPath(infinicordDir);
 });
 
 function getWindow(e: IpcMainInvokeEvent, key?: string) {
@@ -151,7 +161,7 @@ handle(IpcEvents.SPELLCHECK_ADD_TO_DICTIONARY, (e, word: string) => {
 
 handle(IpcEvents.SELECT_VENCORD_DIR, async (_e, value?: null) => {
     if (value === null) {
-        delete State.store.equicordDir;
+        delete State.store.infinicordDir;
         return "ok";
     }
 
@@ -163,7 +173,7 @@ handle(IpcEvents.SELECT_VENCORD_DIR, async (_e, value?: null) => {
     const dir = res.filePaths[0];
     if (!isValidVencordInstall(dir)) return "invalid";
 
-    State.store.equicordDir = dir;
+    State.store.infinicordDir = dir;
 
     return "ok";
 });

@@ -12,23 +12,22 @@ import { STATIC_DIR } from "shared/paths";
 import { Millis } from "shared/utils/millis";
 
 import { State } from "./settings";
+import { setSplashIndeterminate, updateSplashMessage, updateSplashProgress } from "./splash";
 import { handle } from "./utils/ipcWrappers";
 import { makeLinksOpenExternally } from "./utils/makeLinksOpenExternally";
 import { loadView } from "./vesktopStatic";
 
 let updaterWindow: BrowserWindow | null = null;
 
-autoUpdater.on("update-available", update => {
-    if (State.store.updater?.ignoredVersion === update.version) return;
-    if ((State.store.updater?.snoozeUntil ?? 0) > Date.now()) return;
-
-    openUpdater(update);
+autoUpdater.on("update-downloaded", () => {
+    updateSplashMessage("Restarting to apply update...");
+    setTimeout(() => autoUpdater.quitAndInstall(), 100);
 });
-
-autoUpdater.on("update-downloaded", () => setTimeout(() => autoUpdater.quitAndInstall(), 100));
-autoUpdater.on("download-progress", p =>
-    updaterWindow?.webContents.send(UpdaterIpcEvents.DOWNLOAD_PROGRESS, p.percent)
-);
+autoUpdater.on("download-progress", p => {
+    updaterWindow?.webContents.send(UpdaterIpcEvents.DOWNLOAD_PROGRESS, p.percent);
+    updateSplashProgress(p.percent);
+    if (p.percent < 100) updateSplashMessage(`Downloading update... ${Math.round(p.percent)}%`);
+});
 autoUpdater.on("error", err => updaterWindow?.webContents.send(UpdaterIpcEvents.ERROR, err.message));
 
 autoUpdater.autoDownload = false;
@@ -43,9 +42,47 @@ handle(IpcEvents.UPDATER_OPEN, async () => {
     if (res?.isUpdateAvailable && res.updateInfo) openUpdater(res.updateInfo);
 });
 
+/**
+ * Launch-time update check, Discord style: progress lives on the splash
+ * window and the app restarts itself once the update is downloaded. The
+ * updater window stays available via the settings UI only.
+ */
+export function startBootUpdateCheck() {
+    setSplashIndeterminate(true);
+    updateSplashMessage("Checking for updates...");
+
+    autoUpdater
+        .checkForUpdates()
+        .then(res => {
+            if (!res?.isUpdateAvailable) {
+                setSplashIndeterminate(false);
+                return;
+            }
+            const update = res.updateInfo;
+            if (State.store.updater?.ignoredVersion === update.version) {
+                setSplashIndeterminate(false);
+                return;
+            }
+            if ((State.store.updater?.snoozeUntil ?? 0) > Date.now()) {
+                setSplashIndeterminate(false);
+                return;
+            }
+
+            autoUpdater.downloadUpdate().catch(e => {
+                setSplashIndeterminate(false);
+                updateSplashMessage("Update download failed");
+                console.error("[Infinicord] Update download failed:", e);
+            });
+        })
+        .catch(e => {
+            setSplashIndeterminate(false);
+            console.error("[Infinicord] Update check failed:", e);
+        });
+}
+
 function openUpdater(update: UpdateInfo) {
     updaterWindow = new BrowserWindow({
-        title: "Equibop Updater",
+        title: "Infinicord Updater",
         autoHideMenuBar: true,
         ...(process.platform === "win32"
             ? { icon: join(STATIC_DIR, "icon.ico") }
@@ -65,6 +102,7 @@ function openUpdater(update: UpdateInfo) {
         await autoUpdater.downloadUpdate();
     });
     handle(UpdaterIpcEvents.SNOOZE_UPDATE, () => {
+        console.error("[UPD-DEBUG] SNOOZE hit");
         State.store.updater ??= {};
         State.store.updater.snoozeUntil = Date.now() + 1 * Millis.DAY;
         updaterWindow?.close();
