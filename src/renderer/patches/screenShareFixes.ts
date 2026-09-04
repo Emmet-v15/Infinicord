@@ -24,32 +24,10 @@ if (isLinux) {
         }
     }
 
+    // Linux system audio: route the shared app's audio through venmic
     navigator.mediaDevices.getDisplayMedia = async function (opts) {
         const stream = await original.call(this, opts);
         const id = await getVirtmic();
-
-        const frameRate = Number(State.store.screenshareQuality?.frameRate ?? 30);
-        const height = Number(State.store.screenshareQuality?.resolution ?? 720);
-        const width = Math.round(height * (16 / 9));
-        const track = stream.getVideoTracks()[0];
-
-        track.contentHint = String(currentSettings?.contentHint);
-
-        const constraints = {
-            ...track.getConstraints(),
-            frameRate: { min: frameRate, ideal: frameRate },
-            width: { min: 640, ideal: width, max: width },
-            height: { min: 480, ideal: height, max: height },
-            advanced: [{ width: width, height: height }],
-            resizeMode: "none"
-        };
-
-        track
-            .applyConstraints(constraints)
-            .then(() => {
-                logger.info("Applied constraints successfully. New constraints: ", track.getConstraints());
-            })
-            .catch(e => logger.error("Failed to apply constraints.", e));
 
         if (id) {
             const audio = await navigator.mediaDevices.getUserMedia({
@@ -69,6 +47,42 @@ if (isLinux) {
             stream.getAudioTracks().forEach(t => stream.removeTrack(t));
             stream.addTrack(audio.getAudioTracks()[0]);
         }
+
+        return stream;
+    };
+}
+
+{
+    // Apply the picker's quality settings on every platform. Windows shares
+    // otherwise run at Chromium's default constraints and look noticeably
+    // worse than native Discord's GoLive capture.
+    const original = navigator.mediaDevices.getDisplayMedia;
+
+    navigator.mediaDevices.getDisplayMedia = async function (opts) {
+        const stream = await original.call(this, opts);
+
+        const frameRate = Number(State.store.screenshareQuality?.frameRate ?? 30);
+        const height = Number(State.store.screenshareQuality?.resolution ?? 720);
+        const width = Math.round(height * (16 / 9));
+        const track = stream.getVideoTracks()[0];
+
+        track.contentHint = String(currentSettings?.contentHint ?? "motion");
+
+        const constraints = {
+            ...track.getConstraints(),
+            frameRate: { min: frameRate, ideal: frameRate },
+            width: { min: 640, ideal: width, max: width },
+            height: { min: 480, ideal: height, max: height },
+            advanced: [{ width: width, height: height }],
+            resizeMode: "none"
+        };
+
+        track
+            .applyConstraints(constraints)
+            .then(() => {
+                logger.info("Applied constraints successfully. New constraints: ", track.getConstraints());
+            })
+            .catch(e => logger.error("Failed to apply constraints.", e));
 
         return stream;
     };

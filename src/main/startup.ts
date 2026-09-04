@@ -82,6 +82,9 @@ function init() {
     );
     if (process.platform === "win32") {
         disabledFeatures.add("CalculateNativeWinOcclusion");
+        // Chromium's Windows Graphics Capture backend: DPI-aware, higher
+        // quality screen capture than the legacy DXGI duplication path
+        enabledFeatures.add("AllowWgcScreenCapturer");
     }
 
     if (launchArguments) {
