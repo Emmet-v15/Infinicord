@@ -8,6 +8,8 @@ import "./ipc";
 import "./userAssets";
 import "./vesktopProtocol";
 
+import { lookup } from "node:dns";
+
 import { app, BrowserWindow, nativeTheme } from "electron";
 
 import { CommandLine } from "./cli";
@@ -17,7 +19,6 @@ import { registerMediaPermissionsHandler } from "./mediaPermissions";
 import { createProfilePicker, shouldShowProfilePicker } from "./profilePicker";
 import { registerScreenShareHandler } from "./screenShare";
 import { Settings, State } from "./settings";
-import { createSplashWindow } from "./splash";
 import { startBootUpdateCheck } from "./updater";
 import { setAsDefaultProtocolClient } from "./utils/setAsDefaultProtocolClient";
 import { isDeckGameMode } from "./utils/steamOS";
@@ -32,6 +33,10 @@ export let enableHardwareAcceleration = true;
 
 function init() {
     setAsDefaultProtocolClient("discord");
+
+    // warm the OS DNS cache while Chromium boots — on slow links the very
+    // first lookup of the app host is pure added latency
+    lookup("discord.com", () => {});
 
     const { disableSmoothScroll, hardwareAcceleration, hardwareVideoAcceleration } = Settings.store;
     const { launchArguments } = State.store;
@@ -159,19 +164,18 @@ function init() {
 
 init();
 
-async function bootstrap() {
-    // Discord-style: the splash owns update progress from the first frame
-    startBootUpdateCheck();
-
+function bootstrap() {
     if (shouldShowProfilePicker()) {
-        // splash first, then the picker pops over it; picking a profile
-        // spawns its own instance (with its own splash), and Default hands
-        // control back to createWindows for the second splash + main window
-        await createSplashWindow();
-        setTimeout(createProfilePicker, 1500);
+        // the picker is the first window — no splash before it. Picking a
+        // profile spawns its own instance (whose splash owns the update
+        // check); Default hands control back to createWindows, which checks
+        // for updates once its splash exists
+        createProfilePicker();
         return;
     }
 
+    // Discord-style: the splash owns update progress from the first frame
+    startBootUpdateCheck();
     createWindows();
 }
 

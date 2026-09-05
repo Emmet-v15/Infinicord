@@ -34,7 +34,12 @@ autoUpdater.autoDownload = false;
 autoUpdater.autoInstallOnAppQuit = false;
 autoUpdater.fullChangelog = true;
 
-const isOutdated = autoUpdater.checkForUpdates().then(res => Boolean(res?.isUpdateAvailable));
+// one shared check per process: electron-updater refetches latest.yml on
+// every checkForUpdates call, and the boot check + settings flag used to
+// race two network fetches on every launch
+const updateCheckPromise = autoUpdater.checkForUpdates();
+
+const isOutdated = updateCheckPromise.then(res => Boolean(res?.isUpdateAvailable)).catch(() => false);
 
 handle(IpcEvents.UPDATER_IS_OUTDATED, () => isOutdated);
 handle(IpcEvents.UPDATER_OPEN, async () => {
@@ -51,8 +56,8 @@ export function startBootUpdateCheck() {
     setSplashIndeterminate(true);
     updateSplashMessage("Checking for updates...");
 
-    autoUpdater
-        .checkForUpdates()
+    // reuses the in-flight module-level check rather than refetching
+    updateCheckPromise
         .then(res => {
             if (!res?.isUpdateAvailable) {
                 setSplashIndeterminate(false);

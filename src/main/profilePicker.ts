@@ -6,16 +6,16 @@
 
 /*
  * Profile picker: when enabled, the plain launcher (no --profile) shows a
- * Steam-style "Who's chatting?" window after the loading splash. "Default"
- * continues in this process; a numbered profile is spawned detached via
- * --profile N and this launcher exits, so no profile's single-instance lock
- * is held by the picker.
+ * Steam-style "Who's chatting?" window immediately as the app's first
+ * window — no splash before it. "Default" continues in this process; a
+ * numbered profile is spawned detached via --profile N and this launcher
+ * exits, so no profile's single-instance lock is held by the picker.
  *
  * Profiles are discovered from existing data dirs, NOT Start Menu
  * shortcuts — INFINICORD.lnk alone is the only entry point.
  */
 
-import { app } from "electron";
+import { app, nativeTheme } from "electron";
 import { BrowserWindow } from "electron/main";
 import { join } from "path";
 import { SplashProps } from "shared/browserWinProperties";
@@ -24,7 +24,7 @@ import { STATIC_DIR } from "shared/paths";
 import { CommandLine } from "./cli";
 import { createWindows } from "./mainWindow";
 import { Settings, State } from "./settings";
-import { getSplash } from "./splash";
+import { startBootUpdateCheck } from "./updater";
 import { makeLinksOpenExternally } from "./utils/makeLinksOpenExternally";
 import { getKnownProfiles, launchSession, SESSIONS_MAX } from "./utils/profiles";
 import { loadView } from "./vesktopStatic";
@@ -55,6 +55,9 @@ export function createProfilePicker() {
     const win = new BrowserWindow({
         ...SplashProps,
         transparent: false,
+        // match the view's light-dark --bg so the first frame never flashes
+        // white while the picker HTML paints
+        backgroundColor: nativeTheme.shouldUseDarkColors ? "#313338" : "#ffffff",
         frame: false,
         autoHideMenuBar: true,
         ...(process.platform === "win32"
@@ -99,10 +102,13 @@ export function createProfilePicker() {
         if (choice === "default") {
             settled = true;
             State.store.lastProfile = "default";
-            win.close();
-            // the pre-picker splash is done; createWindows shows a fresh one
-            getSplash()?.destroy();
+            // this process becomes the Default instance: its splash owns the
+            // update check from here on. createWindows() constructs the
+            // splash synchronously before its first await, so closing the
+            // picker afterwards never trips window-all-closed → quit
+            startBootUpdateCheck();
             createWindows();
+            win.close();
             return;
         }
 
