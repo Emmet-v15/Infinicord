@@ -31,6 +31,18 @@
             z-index: 10;
         }
 
+        /* Chromium only honors no-drag reliably as a descendant of the drag
+           region — this invisible hole, aligned over the × (body padding
+           20px/32px, button 34px), keeps the close button clickable */
+        #drag-close-hole {
+            position: absolute;
+            top: 20px;
+            right: 32px;
+            width: 34px;
+            height: 34px;
+            -webkit-app-region: no-drag;
+        }
+
         #top {
             display: flex;
             justify-content: space-between;
@@ -162,7 +174,7 @@
 </head>
 
 <body>
-    <div id="drag"></div>
+    <div id="drag"><div id="drag-close-hole"></div></div>
     <div id="top">
         <div id="brand">
             <img draggable="false" src="./brand-splash.svg" alt="" />
@@ -232,7 +244,8 @@
         addTileEl.onclick = () => console.info("addnew");
     }
 
-    close.onclick = () => console.info("cancel");
+    // NB: bare `close` would resolve to window.close, not this button
+    document.getElementById("close").onclick = () => console.info("cancel");
     document.addEventListener("keydown", e => {
         if (e.key === "Escape") console.info("cancel");
         if (e.key === "Enter") {

@@ -16,6 +16,7 @@ import { AppEvents } from "./events";
 import { mainWin } from "./mainWindow";
 import { fileExistsAsync } from "./utils/fileExists";
 import { handle } from "./utils/ipcWrappers";
+import { noCache } from "./vesktopStatic";
 
 const CUSTOMIZABLE_ASSETS = [
     "splash",
@@ -68,10 +69,10 @@ export async function handleVesktopAssetsProtocol(path: string, req: Request) {
 
     try {
         const res = await net.fetch(pathToFileURL(join(UserAssetFolder, asset)).href);
-        if (res.ok) return res;
+        if (res.ok) return noCache(res);
     } catch {}
 
-    return net.fetch(pathToFileURL(join(STATIC_DIR, DEFAULT_ASSETS[asset])).href);
+    return noCache(await net.fetch(pathToFileURL(join(STATIC_DIR, DEFAULT_ASSETS[asset])).href));
 }
 
 handle(IpcEvents.CHOOSE_USER_ASSET, async (_event, asset: UserAssetType, value?: null) => {
