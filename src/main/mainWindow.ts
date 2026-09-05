@@ -311,7 +311,7 @@ function initStaticTitle(win: BrowserWindow) {
 }
 
 function getWindowBoundsOptions(): BrowserWindowConstructorOptions {
-    addSplashLog();
+    addSplashLog("window bounds");
 
     // We want the default window behaviour to apply in game mode since it expects everything to be fullscreen and maximized.
     if (isDeckGameMode) return {};
@@ -346,7 +346,7 @@ function getWindowBoundsOptions(): BrowserWindowConstructorOptions {
 }
 
 function buildBrowserWindowOptions(): BrowserWindowConstructorOptions {
-    addSplashLog();
+    addSplashLog("window options");
 
     const { staticTitle, transparencyOption, enableMenu, customTitleBar, splashTheming, splashBackground } =
         Settings.store;
@@ -426,7 +426,7 @@ function createMainWindow() {
     win.webContents.setMaxListeners(15);
     win.setMenuBarVisibility(false);
 
-    addSplashLog();
+    addSplashLog("main window");
 
     if (process.platform === "darwin" && Settings.store.customTitleBar) win.setWindowButtonVisibility(false);
     if (process.platform !== "win32" && CommandLine.values["windows-spoof"]) {
@@ -460,16 +460,16 @@ function createMainWindow() {
     initDevtoolsListeners(win);
     initStaticTitle(win);
 
-    addSplashLog();
+    addSplashLog("window init");
 
     win.webContents.setUserAgent(BrowserUserAgent);
-    addSplashLog();
+    addSplashLog("user agent");
     win.webContents.setWebRTCIPHandlingPolicy("default_public_and_private_interfaces");
 
     // if the open-url event is fired (in index.ts) while starting up, darwinURL will be set. If not fall back to checking the process args (which Windows and Linux use for URI calling.)
     // win.webContents.session.clearCache().then(() => {
     loadUrl(darwinURL || process.argv.find(arg => arg.startsWith("discord://")));
-    addSplashLog();
+    addSplashLog("navigation");
     // });
 
     return win;
@@ -504,14 +504,14 @@ export async function createWindows() {
 
         // SteamOS letterboxes and scales it terribly, so just full screen it
         if (isDeckGameMode) splash.setFullScreen(true);
-        addSplashLog();
+        addSplashLog("splash");
     }
 
-    addSplashLog();
+    addSplashLog("paths");
     await ensureVencordFiles();
     runVencordMain();
 
-    addSplashLog();
+    addSplashLog("client mod");
     mainWin = createMainWindow();
 
     AppEvents.on("appLoaded", () => {

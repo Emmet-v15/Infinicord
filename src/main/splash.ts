@@ -18,6 +18,8 @@ import { loadView } from "./vesktopStatic";
 
 const totalTasks = 9;
 let doneTasks = 0;
+const bootStart = Date.now();
+let lastTickAt = bootStart;
 
 let splashReady = false;
 const pendingSplashMessages: Array<[string, unknown]> = [];
@@ -112,9 +114,14 @@ export async function createSplashWindow(startMinimized = false) {
     return splash;
 }
 
-export function addSplashLog() {
+export function addSplashLog(label = "step") {
     if (!splash || splash.isDestroyed()) return;
     doneTasks++;
+    const now = Date.now();
+    console.log(
+        `[boot] ${label}: +${now - lastTickAt}ms (total ${((now - bootStart) / 1000).toFixed(1)}s, task ${doneTasks}/${totalTasks})`
+    );
+    lastTickAt = now;
     const percentage = Math.min(100, Math.round((doneTasks / totalTasks) * 100));
     sendToSplash("update-splash-progress", percentage);
 }

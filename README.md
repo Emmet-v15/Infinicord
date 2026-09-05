@@ -56,5 +56,5 @@ Data/config dir can be overridden with `INFINICORD_USER_DATA_DIR` (`src/main/con
   is still untracked. Commit or keep applying after upstream merges.
 - Upstream CI workflows under `.github/workflows` were deleted locally — builds/packaging
   here run manually via the Bun scripts above.
-- Version bumped independently of upstream (currently 3.2.10). Upstream attribution: Equibop by Equicord,
+- Version bumped independently of upstream (currently 3.2.11). Upstream attribution: Equibop by Equicord,
   Vesktop by Vendicated & contributors, both GPL-3.0-or-later (see `LICENSE`).

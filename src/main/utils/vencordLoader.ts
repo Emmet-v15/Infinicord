@@ -8,6 +8,7 @@ import { existsSync, rmSync } from "fs";
 import { join } from "path";
 
 import { USER_AGENT } from "../constants";
+import { setSplashIndeterminate, updateSplashMessage, updateSplashProgress } from "../splash";
 import { VENCORD_DIR } from "../vencordDir";
 import { downloadFile, fetchie } from "./http";
 
@@ -36,12 +37,15 @@ export async function githubGet(endpoint: string) {
     return fetchie(API_BASE + endpoint, opts, { retryOnNetworkError: true });
 }
 
-export async function downloadVencordAsar() {
+export async function downloadVencordAsar(onProgress?: (received: number, total: number) => void) {
     await downloadFile(
         "https://github.com/Equicord/Equicord/releases/latest/download/equibop.asar",
         VENCORD_DIR,
         {},
-        { retryOnNetworkError: true }
+        // a stuck boot is worse than starting without the client mod:
+        // cap the backoff loop instead of grinding for ~25 minutes
+        { retryOnNetworkError: true, maxRetries: 3 },
+        onProgress
     );
 }
 
@@ -65,6 +69,8 @@ export async function ensureVencordFiles() {
         // e.g. a previous instance was killed mid-download and left a
         // truncated archive at the real path — never trust it, re-download
         console.warn("[Infinicord] cached client-mod archive is corrupt — re-downloading");
+        updateSplashMessage("Loading client mod...");
+        setSplashIndeterminate(true);
         // recursive: the path may also be a leftover extraction directory,
         // which plain rmSync cannot remove (EISDIR)
         try {
@@ -75,8 +81,17 @@ export async function ensureVencordFiles() {
     }
 
     try {
-        await downloadVencordAsar();
+        await downloadVencordAsar((received, total) => {
+            const pct = total ? Math.round((received / total) * 100) : 0;
+            // tick 3 of 9 spans 22%..33% on the splash bar
+            updateSplashProgress(22 + Math.round((pct / 100) * 11));
+            updateSplashMessage(`Downloading client mod... ${pct}%`);
+        });
+        setSplashIndeterminate(false);
+        updateSplashMessage("");
     } catch (e) {
+        setSplashIndeterminate(false);
+        updateSplashMessage("");
         // never block startup on this — the app runs, just without the mod
         console.error("[Infinicord] Failed to download client-mod archive:", e);
     }
