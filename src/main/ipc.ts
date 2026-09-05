@@ -40,15 +40,14 @@ import { handle, handleSync } from "./utils/ipcWrappers";
 import { PopoutWindows } from "./utils/popout";
 import { getSessionsState, launchSession, setSessionCount } from "./utils/profiles";
 import { isDeckGameMode, showGamePage } from "./utils/steamOS";
-import { isValidVencordInstall } from "./utils/vencordLoader";
+import { isValidVencordInstall, vencordFilePath } from "./utils/vencordLoader";
 import { rebrandClientMod } from "./utils/vencordRebrand";
-import { VENCORD_DIR } from "./vencordDir";
 
 handleSync(IpcEvents.GET_VENCORD_PRELOAD_SCRIPT, () =>
-    rebrandClientMod(readFileSync(join(VENCORD_DIR, "preload.js"), "utf-8"))
+    rebrandClientMod(readFileSync(vencordFilePath("preload.js"), "utf-8"))
 );
 handleSync(IpcEvents.GET_VENCORD_RENDERER_SCRIPT, () =>
-    rebrandClientMod(readFileSync(join(VENCORD_DIR, "renderer.js"), "utf-8"))
+    rebrandClientMod(readFileSync(vencordFilePath("renderer.js"), "utf-8"))
 );
 
 const VESKTOP_RENDERER_JS_PATH = join(__dirname, "renderer.js");

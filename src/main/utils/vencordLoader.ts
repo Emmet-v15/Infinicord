@@ -46,7 +46,16 @@ export async function downloadVencordAsar() {
 }
 
 export function isValidVencordInstall(dir: string) {
-    return existsSync(join(dir, "equibop/main.js"));
+    return existsSync(join(dir, "main.js")) || existsSync(join(dir, "equibop/main.js"));
+}
+
+/**
+ * Resolve a client-mod file inside the cached asar. Equicord's archive used
+ * to nest everything under equibop/; current releases put files at the root.
+ * Electron's fs layer reads asars transparently, so plain existsSync works.
+ */
+export function vencordFilePath(file: string): string {
+    return existsSync(join(VENCORD_DIR, file)) ? join(VENCORD_DIR, file) : join(VENCORD_DIR, "equibop", file);
 }
 
 export async function ensureVencordFiles() {
@@ -80,8 +89,16 @@ export async function ensureVencordFiles() {
 function isValidAsarArchive(archivePath: string) {
     try {
         const asar = require("@electron/asar") as { extractFile(p: string, f: string): Buffer };
-        asar.extractFile(archivePath, "package.json");
-        return true;
+        // both known layouts: root files (current) and equibop/ prefix (legacy)
+        for (const entry of ["package.json", "equibop/package.json"]) {
+            try {
+                asar.extractFile(archivePath, entry);
+                return true;
+            } catch {
+                // try the next layout
+            }
+        }
+        return false;
     } catch (e) {
         console.warn("[Infinicord] archive validation failed:", e);
         return false;
