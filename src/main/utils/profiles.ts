@@ -15,6 +15,7 @@
 
 import { spawn } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
+import { rm } from "node:fs/promises";
 import { basename, join } from "node:path";
 
 export const SESSIONS_MAX = 9;
@@ -144,4 +145,57 @@ export function launchSession(n: number): boolean {
     });
     child.unref();
     return true;
+}
+
+export function profileDataDir(n: number) {
+    return join(BASE_ROAMING_DIR, `infinicord-${n}`);
+}
+
+/**
+ * True when a live instance was launched with --profile n. Asked via the
+ * process command lines — a probe through Electron's own singleton lock
+ * deadlocks when called a second time inside one process, and rm'ing a
+ * running profile's dir would corrupt it before hitting a locked file, so
+ * the guard must come first.
+ */
+export async function isProfileRunning(n: number): Promise<boolean> {
+    if (process.platform !== "win32") return false;
+    const { execFile } = require("node:child_process") as typeof import("node:child_process");
+    const exe = basename(process.execPath);
+    const script = `(Get-CimInstance Win32_Process -Filter "Name='${exe}'").CommandLine`;
+    return new Promise(resolve => {
+        execFile(
+            "powershell.exe",
+            ["-NoProfile", "-NonInteractive", "-Command", script],
+            { timeout: 15000 },
+            (err, stdout) => {
+                // on query failure assume not running: rm below still fails
+                // safely (EBUSY) instead of ever half-deleting a live profile
+                if (err) return resolve(false);
+                resolve(new RegExp(`--profile[="' ]+${n}(\\s|$)`).test(String(stdout)));
+            }
+        );
+    });
+}
+
+export type DeleteProfileResult = { ok: true } | { ok: false; error: string };
+
+/** Removes a profile's entire data dir (sign-in, settings, caches). */
+export async function deleteProfile(n: number): Promise<DeleteProfileResult> {
+    if (!Number.isInteger(n) || n < 1 || n > SESSIONS_MAX) return { ok: false, error: "Invalid profile" };
+
+    const dir = profileDataDir(n);
+    if (!existsSync(dir)) return { ok: false, error: `Profile ${n} has no data to delete` };
+
+    if (await isProfileRunning(n)) {
+        return { ok: false, error: `Profile ${n} is currently running — quit it first` };
+    }
+
+    try {
+        // retries ride out transient EPERM/EBUSY (antivirus, indexer)
+        await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+    } catch {
+        return { ok: false, error: "Could not delete the profile's files — they appear to be in use" };
+    }
+    return { ok: true };
 }

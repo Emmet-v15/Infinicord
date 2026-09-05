@@ -26,7 +26,7 @@ import { createWindows } from "./mainWindow";
 import { Settings, State } from "./settings";
 import { startBootUpdateCheck } from "./updater";
 import { makeLinksOpenExternally } from "./utils/makeLinksOpenExternally";
-import { getKnownProfiles, launchSession, SESSIONS_MAX } from "./utils/profiles";
+import { deleteProfile, getKnownProfiles, launchSession, SESSIONS_MAX } from "./utils/profiles";
 import { loadView } from "./vesktopStatic";
 
 export function shouldShowProfilePicker() {
@@ -43,6 +43,16 @@ const TILE_UNIT = 118;
 const GUTTER = 90;
 const BASE_HEIGHT = 250;
 const ROW_HEIGHT = 146;
+
+/** Fresh picker state — profiles come from disk on every (re)load. */
+function pickerParams() {
+    const profiles = getKnownProfiles();
+    return new URLSearchParams({
+        profiles: profiles.join(","),
+        last: String(State.store.lastProfile ?? "default"),
+        canAdd: profiles.length < SESSIONS_MAX ? "1" : "0"
+    });
+}
 
 export function createProfilePicker() {
     const profiles = getKnownProfiles();
@@ -71,12 +81,7 @@ export function createProfilePicker() {
 
     makeLinksOpenExternally(win);
 
-    const params = new URLSearchParams({
-        profiles: profiles.join(","),
-        last: String(State.store.lastProfile ?? "default"),
-        canAdd: profiles.length < SESSIONS_MAX ? "1" : "0"
-    });
-    loadView(win, "profile-picker.html", params);
+    loadView(win, "profile-picker.html", pickerParams());
 
     // only the first choice counts: the listener is async, so a slow add-new
     // must not let later messages (or a second click) interleave
@@ -93,6 +98,26 @@ export function createProfilePicker() {
             State.store.lastProfile = next;
             launchSession(next);
             app.exit();
+            return;
+        }
+
+        if (msg.startsWith("delete:")) {
+            const profile = Number.parseInt(msg.slice("delete:".length), 10);
+            if (!Number.isInteger(profile)) return;
+
+            deleteProfile(profile).then(res => {
+                if (!res.ok) {
+                    // the picker has no preload, so results ride back in via
+                    // executeJavaScript; the modal shows the error
+                    win.webContents
+                        .executeJavaScript(`window.__deleteResult && window.__deleteResult(${JSON.stringify(res)})`)
+                        .catch(() => {});
+                    return;
+                }
+                if (State.store.lastProfile === profile) State.store.lastProfile = "default";
+                // fresh page: tiles are recomputed from what is now on disk
+                loadView(win, "profile-picker.html", pickerParams());
+            });
             return;
         }
 

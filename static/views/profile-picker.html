@@ -114,6 +114,7 @@
         }
 
         .tile-wrap {
+            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -170,6 +171,125 @@
             font-size: 12px;
             color: var(--fg-secondary);
         }
+
+        /* hover-revealed delete button on numbered profile tiles */
+        .tile-del {
+            position: absolute;
+            top: -7px;
+            right: -7px;
+            z-index: 2;
+            width: 22px;
+            height: 22px;
+            padding: 0;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--fg-secondary);
+            color: var(--bg);
+            font-size: 11px;
+            line-height: 1;
+            cursor: pointer;
+            opacity: 0;
+            transform: scale(0.7);
+            transition: 120ms opacity, 120ms transform, 150ms background;
+        }
+
+        .tile-wrap:hover .tile-del {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .tile-del:hover {
+            background: #d83c3e;
+            color: #fff;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #modal {
+            position: fixed;
+            inset: 0;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgb(0 0 0 / 0.55);
+        }
+
+        #modal-card {
+            box-sizing: border-box;
+            width: 380px;
+            max-width: calc(100vw - 48px);
+            padding: 20px 22px;
+            border-radius: 10px;
+            background: var(--bg);
+            box-shadow: 0 18px 50px rgb(0 0 0 / 0.45);
+        }
+
+        #modal-card h2 {
+            margin: 0 0 8px;
+            font-size: 17px;
+        }
+
+        #modal-card p {
+            margin: 0;
+            font-size: 13px;
+            line-height: 1.45;
+            color: var(--fg-secondary);
+        }
+
+        #modal-error {
+            margin-top: 8px;
+            color: #fa777c;
+        }
+
+        #modal-error.empty {
+            display: none;
+        }
+
+        #modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        #modal-actions button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 150ms background;
+        }
+
+        #modal-cancel {
+            background: color-mix(in srgb, var(--fg) 10%, transparent);
+            color: var(--fg);
+        }
+
+        #modal-cancel:hover {
+            background: color-mix(in srgb, var(--fg) 16%, transparent);
+        }
+
+        #modal-delete {
+            background: #d83c3e;
+            color: #fff;
+        }
+
+        #modal-delete:hover {
+            background: #a12d31;
+        }
+
+        #modal-delete:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
     </style>
 </head>
 
@@ -186,6 +306,18 @@
     <div id="main">
         <h1>Who's chatting?</h1>
         <div id="tiles"></div>
+    </div>
+
+    <div id="modal" class="hidden">
+        <div id="modal-card">
+            <h2 id="modal-title">Delete profile?</h2>
+            <p id="modal-body"></p>
+            <p id="modal-error" class="empty"></p>
+            <div id="modal-actions">
+                <button id="modal-cancel" type="button">Cancel</button>
+                <button id="modal-delete" type="button">Delete</button>
+            </div>
+        </div>
     </div>
 </body>
 
@@ -232,6 +364,16 @@
         num.className = "num";
         num.textContent = String(n);
         addTile({ value: String(n), caption: `Profile ${n}`, content: num });
+
+        // hover-revealed delete button — never on Default or Add
+        const wrap = tiles.lastElementChild;
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "tile-del";
+        del.title = `Delete profile ${n}`;
+        del.textContent = "✕";
+        del.onclick = () => openDeleteModal(n);
+        wrap.appendChild(del);
     }
 
     // Add-new tile
@@ -246,7 +388,72 @@
 
     // NB: bare `close` would resolve to window.close, not this button
     document.getElementById("close").onclick = () => console.info("cancel");
+
+    // ---- delete confirmation modal ----
+    const modalEl = document.getElementById("modal");
+    const modalTitle = document.getElementById("modal-title");
+    const modalBody = document.getElementById("modal-body");
+    const modalError = document.getElementById("modal-error");
+    const modalCancel = document.getElementById("modal-cancel");
+    const modalDelete = document.getElementById("modal-delete");
+    const dragEl = document.getElementById("drag");
+
+    let deleteTarget = null; // profile number the modal is open for
+    let deleteBusy = false;
+
+    function openDeleteModal(n) {
+        deleteTarget = n;
+        deleteBusy = false;
+        modalTitle.textContent = `Delete profile ${n}?`;
+        modalBody.textContent =
+            "This permanently deletes Profile " +
+            n +
+            "'s data — its Discord sign-in, settings and caches. This cannot be undone.";
+        modalError.textContent = "";
+        modalError.classList.add("empty");
+        modalDelete.disabled = false;
+        modalDelete.textContent = "Delete";
+        // the modal owns the whole window: dragging would eat clicks in the
+        // top strip behind the backdrop (no-drag needs a drag ancestor)
+        dragEl.style.display = "none";
+        modalEl.classList.remove("hidden");
+        modalCancel.focus();
+    }
+
+    function closeDeleteModal() {
+        if (deleteBusy) return;
+        deleteTarget = null;
+        modalEl.classList.add("hidden");
+        dragEl.style.display = "";
+    }
+
+    // main process reports a failed delete back (success reloads the page)
+    window.__deleteResult = res => {
+        deleteBusy = false;
+        modalDelete.disabled = false;
+        modalDelete.textContent = "Delete";
+        modalError.textContent = (res && res.error) || "Something went wrong";
+        modalError.classList.remove("empty");
+    };
+
+    modalCancel.onclick = closeDeleteModal;
+    modalEl.onclick = e => {
+        if (e.target === modalEl) closeDeleteModal();
+    };
+    modalDelete.onclick = () => {
+        if (deleteTarget == null || deleteBusy) return;
+        deleteBusy = true;
+        modalDelete.disabled = true;
+        modalDelete.textContent = "Deleting…";
+        console.info("delete:" + deleteTarget);
+    };
+
     document.addEventListener("keydown", e => {
+        if (deleteTarget != null) {
+            // while deleting, Escape/Enter must never reach the app-quit path
+            if (!deleteBusy && (e.key === "Escape" || e.key === "Enter")) closeDeleteModal();
+            return;
+        }
         if (e.key === "Escape") console.info("cancel");
         if (e.key === "Enter") {
             const selected = tiles.querySelector(".tile.selected");
