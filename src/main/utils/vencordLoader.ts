@@ -4,10 +4,12 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { existsSync, rmSync } from "fs";
-import { join } from "path";
+import { copyFileSync, existsSync, mkdirSync, rmSync } from "fs";
+// raw reads on the .asar file itself must bypass Electron's asar interception
+import { closeSync, fstatSync, openSync, readSync } from "original-fs";
+import { dirname, join } from "path";
 
-import { USER_AGENT } from "../constants";
+import { SESSION_DATA_DIR, USER_AGENT } from "../constants";
 import { setSplashIndeterminate, updateSplashMessage, updateSplashProgress } from "../splash";
 import { VENCORD_DIR } from "../vencordDir";
 import { downloadFile, fetchie } from "./http";
@@ -63,6 +65,19 @@ export function vencordFilePath(file: string): string {
 }
 
 export async function ensureVencordFiles() {
+    // migrate pre-shared-cache copies (per-profile sessionData) so existing
+    // installs don't re-download on first launch after this change
+    const legacyCache = join(SESSION_DATA_DIR, "infinicord.asar");
+    if (!existsSync(VENCORD_DIR) && isValidAsarArchive(legacyCache)) {
+        try {
+            mkdirSync(dirname(VENCORD_DIR), { recursive: true });
+            copyFileSync(legacyCache, VENCORD_DIR);
+            console.log("[Infinicord] migrated client-mod cache to the shared location");
+        } catch (e) {
+            console.warn("[Infinicord] client-mod cache migration failed:", e);
+        }
+    }
+
     if (existsSync(VENCORD_DIR)) {
         if (isValidAsarArchive(VENCORD_DIR)) return;
 
@@ -98,24 +113,39 @@ export async function ensureVencordFiles() {
 }
 
 /**
- * Cheap integrity probe: the archive must be parseable by @electron/asar and
- * contain an entry point. Catches truncated downloads that pass existsSync().
+ * Cheap integrity probe without @electron/asar (which is not packaged):
+ * parse the asar header directly and confirm the archive is large enough to
+ * contain every file entry — catches truncated downloads that pass
+ * existsSync().
  */
 function isValidAsarArchive(archivePath: string) {
+    let fd: number | undefined;
     try {
-        const asar = require("@electron/asar") as { extractFile(p: string, f: string): Buffer };
-        // both known layouts: root files (current) and equibop/ prefix (legacy)
-        for (const entry of ["package.json", "equibop/package.json"]) {
-            try {
-                asar.extractFile(archivePath, entry);
-                return true;
-            } catch {
-                // try the next layout
+        fd = openSync(archivePath, "r");
+        // pickle framing: [4][4 headerSize][4 jsonLen][4 strLen][json...]
+        const head = Buffer.alloc(16);
+        if (readSync(fd, head, 0, 16, 0) !== 16) return false;
+        const headerSize = head.readUInt32LE(4);
+        const jsonLen = head.readUInt32LE(12);
+        const json = Buffer.alloc(jsonLen);
+        if (readSync(fd, json, 0, jsonLen, 16) !== jsonLen) return false;
+        const root = JSON.parse(json.toString("utf8")).files;
+        let maxEnd = 0;
+        const walk = (files: Record<string, { size?: number; offset?: string; files?: unknown }>) => {
+            for (const entry of Object.values(files)) {
+                if (entry.files) walk(entry.files as typeof files);
+                else if (entry.size != null && entry.offset != null) {
+                    maxEnd = Math.max(maxEnd, Number(entry.offset) + entry.size);
+                }
             }
-        }
-        return false;
+        };
+        walk(root);
+        // file data begins after 8 + headerSize bytes of pickle framing
+        return 8 + headerSize + maxEnd <= fstatSync(fd).size;
     } catch (e) {
         console.warn("[Infinicord] archive validation failed:", e);
         return false;
+    } finally {
+        if (fd != null) closeSync(fd);
     }
 }

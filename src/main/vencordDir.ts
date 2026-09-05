@@ -6,10 +6,12 @@
 
 import { join } from "path";
 
-import { SESSION_DATA_DIR } from "./constants";
+import { DATA_DIR } from "./constants";
 import { State } from "./settings";
 
-// this is in a separate file to avoid circular dependencies
+// this is in a separate file to avoid circular dependencies.
+// The cache lives in the shared data dir so every profile instance reuses
+// one download instead of keeping a 16MB copy in its own sessionData.
 export const VENCORD_DIR = State.store.infinicordDir
     ? join(State.store.infinicordDir, "infinicord")
-    : join(SESSION_DATA_DIR, "infinicord.asar");
+    : join(DATA_DIR, "cache", "infinicord.asar");

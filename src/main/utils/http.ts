@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { createWriteStream, mkdirSync, renameSync, rmSync } from "original-fs";
+import { copyFileSync, createWriteStream, mkdirSync, renameSync, rmSync } from "original-fs";
 import { dirname } from "path";
 import { Readable } from "stream";
 import { pipeline } from "stream/promises";
@@ -45,9 +45,30 @@ export async function downloadFile(
                 autoClose: true
             })
         );
-        // target may be a file or a leftover extraction directory
-        rmSync(file, { force: true, recursive: true });
-        renameSync(partial, file);
+        // swap into place without deleting the live file first: sibling
+        // instances may be reading or validating it at the same moment
+        let swapped = false;
+        for (let attempt = 0; attempt < 5 && !swapped; attempt++) {
+            try {
+                if (attempt > 0) await setTimeout(200 * attempt);
+                // target may be a file or a leftover extraction directory
+                rmSync(file, { force: true, recursive: true });
+                renameSync(partial, file);
+                swapped = true;
+            } catch {
+                // brief lock (antivirus / sibling instance) — retry
+            }
+        }
+        if (!swapped) {
+            try {
+                copyFileSync(partial, file);
+                rmSync(partial, { force: true, recursive: true });
+            } catch {
+                // leave the partial; the live file is untouched and still valid
+                console.error("Failed to swap downloaded file into place:", file);
+                throw new Error(`Failed to replace ${file} with downloaded copy`);
+            }
+        }
     } catch (e) {
         rmSync(partial, { force: true, recursive: true });
         throw e;
