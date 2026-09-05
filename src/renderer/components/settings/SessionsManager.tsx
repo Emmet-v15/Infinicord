@@ -55,14 +55,14 @@ export const SessionsManager: SettingsComponent = ({ settings }) => {
                     </TextButton>
                 ))}
             </div>
+            <VesktopSettingsSwitch
+                title="Ask Which Profile on Launch"
+                description="Show a picker when starting Infinicord to choose which profile to open"
+                value={settings.askProfileOnLaunch ?? true}
+                onChange={v => (settings.askProfileOnLaunch = v)}
+            />
             {state.shortcuts.length > 0 && (
                 <>
-                    <VesktopSettingsSwitch
-                        title="Ask Which Profile on Launch"
-                        description="Show a picker when starting Infinicord to choose which profile to open"
-                        value={settings.askProfileOnLaunch ?? false}
-                        onChange={v => (settings.askProfileOnLaunch = v)}
-                    />
                     <Paragraph>Launch now:</Paragraph>
                     <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
                         {state.shortcuts.map(n => (

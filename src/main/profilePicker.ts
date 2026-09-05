@@ -33,8 +33,9 @@ export function shouldShowProfilePicker() {
     // explicit profile or autostart/boot launches skip the picker entirely
     if (CommandLine.values.profile || CommandLine.values["start-minimized"]) return false;
 
-    // nothing to pick until at least one profile exists on disk
-    return process.platform === "win32" && getKnownProfiles().length > 0 && !!Settings.store.askProfileOnLaunch;
+    // default ON: with no profiles yet the picker still offers Default and
+    // "Add profile", which is how new users create their first profile
+    return process.platform === "win32" && (Settings.store.askProfileOnLaunch ?? true);
 }
 
 // tile 96px + gap 22px on an 80px gutter; tiles wrap beyond 1280px width
