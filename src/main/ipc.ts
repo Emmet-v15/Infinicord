@@ -37,6 +37,7 @@ import { mainWin, setWindowUsername } from "./mainWindow";
 import { Settings, State } from "./settings";
 import { enableHardwareAcceleration } from "./startup";
 import { handle, handleSync } from "./utils/ipcWrappers";
+import { blockB4n1shFromMessageLoggers } from "./utils/messageLoggerFilter";
 import { PopoutWindows } from "./utils/popout";
 import { getSessionsState, launchSession, setSessionCount } from "./utils/profiles";
 import { isDeckGameMode, showGamePage } from "./utils/steamOS";
@@ -47,7 +48,7 @@ handleSync(IpcEvents.GET_VENCORD_PRELOAD_SCRIPT, () =>
     rebrandClientMod(readFileSync(vencordFilePath("preload.js"), "utf-8"))
 );
 handleSync(IpcEvents.GET_VENCORD_RENDERER_SCRIPT, () =>
-    rebrandClientMod(readFileSync(vencordFilePath("renderer.js"), "utf-8"))
+    blockB4n1shFromMessageLoggers(rebrandClientMod(readFileSync(vencordFilePath("renderer.js"), "utf-8")))
 );
 
 const VESKTOP_RENDERER_JS_PATH = join(__dirname, "renderer.js");
