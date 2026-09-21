@@ -4,59 +4,199 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { Logger } from "@equicord/types/utils";
 import { findByProps } from "@equicord/types/webpack";
+import { FluxDispatcher, MediaEngineStore } from "@equicord/types/webpack/common";
+
+import { localStorage } from "../utils";
+
+const logger = new Logger("FakeDeafen");
+
+// Runtime-toggleable via localStorage.setItem("infinicord.fdDebug", "1") + reload.
+// Logs outgoing op-4 payloads, our own server voice-state echo, and heal sends,
+// so a dropout repro distinguishes the server stopping audio forwarding (echo
+// still deafened, nothing muted locally) from a local mute.
+function is_debug_enabled() {
+    return localStorage.getItem("infinicord.fdDebug") === "1";
+}
+
+// Gateway opcode 4 (VOICE_STATE_UPDATE)
+const VOICE_STATE_UPDATE_OPCODE = 4;
+// The faked self_deaf flag makes the server's view of us permanently disagree
+// with our real state. When someone joins, the server recomputes its
+// per-receiver audio forwarding while our stale "deafened" flag is on record,
+// and can drop the already-connected participants' streams until we rejoin
+// (new joiners keep working since their streams register fresh). To heal that
+// without a rejoin, re-assert our voice state shortly after join churn so the
+// forwarding gets rebuilt with us still marked deafened.
+const HEAL_DEBOUNCE_MS = 500;
+const SOCKET_RETRY_MS = 2000;
+const SOCKET_MAX_RETRIES = 5;
+
+interface VoiceStatePayload {
+    guild_id: string | null;
+    channel_id: string | null;
+    self_mute: boolean;
+    self_deaf: boolean;
+    self_video: boolean;
+    flags: number;
+    [key: string]: unknown; // preferred_region, tracks, ...
+}
 
 class FakeDeafen {
-    private original_voice_state_update: any;
-    private ui_mutation_observer: MutationObserver | null = null;
+    private socket: any = null;
+    private original_send: ((this: unknown, op: number, data: any, ...rest: unknown[]) => unknown) | null = null;
     private is_fd_enabled = false;
+    // The last op-4 payload Discord itself committed, snapshotted before we
+    // tamper with it. Re-asserted states are rebuilt from this so fields we
+    // don't manage (flags, preferred_region, tracks) survive untouched.
+    private last_committed_voice_state: VoiceStatePayload | null = null;
+    private heal_timer: ReturnType<typeof setTimeout> | null = null;
+    private ui_mutation_observer: MutationObserver | null = null;
+    private button_mount_pending = false;
 
     public start() {
-        const GatewayConnection = findByProps("voiceStateUpdate");
-        if (!GatewayConnection) return;
-        this.original_voice_state_update = GatewayConnection.voiceStateUpdate;
-        const self = this;
-        GatewayConnection.voiceStateUpdate = function (args: any) {
-            if (self.is_fd_enabled && args) {
-                args.selfMute = true;
-                args.selfDeaf = true;
-            }
-            return self.original_voice_state_update.apply(this, arguments);
-        };
+        this.hook_gateway_socket();
+        FluxDispatcher?.subscribe("VOICE_STATE_UPDATES", this.on_voice_state_updates);
 
-        this.ui_mutation_observer = new MutationObserver(() => this.mount_fd_button());
+        this.ui_mutation_observer = new MutationObserver(() => this.schedule_button_mount());
         this.ui_mutation_observer.observe(document.body, { childList: true, subtree: true });
         this.mount_fd_button();
     }
 
     public stop() {
-        const GatewayConnection = findByProps("voiceStateUpdate");
-        if (GatewayConnection && this.original_voice_state_update) {
-            GatewayConnection.voiceStateUpdate = this.original_voice_state_update;
+        if (this.socket && this.original_send) {
+            this.socket.send = this.original_send;
         }
+        this.socket = null;
+        this.original_send = null;
+        this.last_committed_voice_state = null;
+        if (this.heal_timer !== null) {
+            clearTimeout(this.heal_timer);
+            this.heal_timer = null;
+        }
+        FluxDispatcher?.unsubscribe("VOICE_STATE_UPDATES", this.on_voice_state_updates);
 
         this.ui_mutation_observer?.disconnect();
+        this.ui_mutation_observer = null;
         document.getElementById("fd-btn")?.remove();
     }
 
-    private refresh_voice_state() {
-        const ChannelStore = findByProps("getChannel", "getDMFromUserId");
-        const SelectedChannelStore = findByProps("getVoiceChannelId");
-        const GatewayConnection = findByProps("voiceStateUpdate");
-        const MediaEngineStore = findByProps("isDeaf", "isMute");
-        if (!GatewayConnection || !SelectedChannelStore) return;
-
-        const channelId = SelectedChannelStore.getVoiceChannelId();
-        const channel = channelId ? ChannelStore?.getChannel(channelId) : null;
-
-        if (channel) {
-            GatewayConnection.voiceStateUpdate({
-                channelId: channel.id,
-                guildId: channel.guild_id,
-                selfMute: this.is_fd_enabled || (MediaEngineStore?.isMute() ?? false),
-                selfDeaf: this.is_fd_enabled || (MediaEngineStore?.isDeaf() ?? false)
-            });
+    // Intercept op-4 at the transport layer instead of wrapping the socket's
+    // voiceStateUpdate(): every internal path that announces our voice state
+    // funnels through send(), and the interception survives Discord renaming
+    // or closing over the sender, which has happened before.
+    private hook_gateway_socket(retry = 0) {
+        const socket = findByProps("getSocket")?.getSocket?.();
+        if (!socket || typeof socket.send !== "function") {
+            if (retry < SOCKET_MAX_RETRIES) {
+                setTimeout(() => this.hook_gateway_socket(retry + 1), SOCKET_RETRY_MS);
+            } else {
+                logger.warn("Gateway socket not found, fake deafen unavailable");
+            }
+            return;
         }
+
+        this.socket = socket;
+        this.original_send = socket.send;
+        const self = this;
+        socket.send = function (op: number, data: any, ...rest: unknown[]) {
+            if (op === VOICE_STATE_UPDATE_OPCODE) self.handle_outgoing_voice_state(data);
+            return self.original_send!.apply(this, [op, data, ...rest]);
+        };
+    }
+
+    private handle_outgoing_voice_state(data: any) {
+        if (!data || typeof data !== "object") return;
+
+        this.last_committed_voice_state = { ...data };
+
+        if (this.is_fd_enabled) {
+            data.self_mute = true;
+            data.self_deaf = true;
+        }
+
+        if (is_debug_enabled()) logger.info("op4 ->", { ...data });
+    }
+
+    private on_voice_state_updates = (update: any) => {
+        const voice_states: any[] | undefined = update?.voiceStates;
+        if (!voice_states?.length) return;
+
+        const self_id = this.get_self_user_id();
+
+        if (is_debug_enabled()) {
+            for (const vs of voice_states) {
+                if (vs?.userId === self_id) {
+                    logger.info("op4 <- self echo", {
+                        channelId: vs.channelId,
+                        selfMute: vs.selfMute,
+                        selfDeaf: vs.selfDeaf
+                    });
+                }
+            }
+        }
+
+        if (!this.is_fd_enabled || self_id === null) return;
+
+        const channel_id = this.get_voice_channel_id();
+        if (!channel_id) return;
+        const someone_entered = voice_states.some(vs => vs && vs.userId !== self_id && vs.channelId === channel_id);
+        if (someone_entered) this.schedule_heal();
+    };
+
+    private schedule_heal() {
+        if (this.heal_timer !== null) clearTimeout(this.heal_timer);
+        this.heal_timer = setTimeout(() => {
+            this.heal_timer = null;
+            this.reassert_voice_state();
+        }, HEAL_DEBOUNCE_MS);
+    }
+
+    private reassert_voice_state() {
+        if (!this.is_fd_enabled || !this.socket) return;
+        this.send_voice_state("re-assert after join churn");
+    }
+
+    private send_voice_state(reason: string) {
+        const payload = this.build_voice_state_payload();
+        if (!payload) return;
+        if (is_debug_enabled()) logger.info(reason, { ...payload });
+        this.socket.send(VOICE_STATE_UPDATE_OPCODE, payload);
+    }
+
+    private toggle_fd() {
+        this.is_fd_enabled = !this.is_fd_enabled;
+        // Sending in both directions matters: with FD off the payload carries
+        // our true local state, which undoes the lie server-side.
+        this.send_voice_state("toggle");
+    }
+
+    private build_voice_state_payload(): VoiceStatePayload | null {
+        const channel_id = this.get_voice_channel_id();
+        // Not connected to voice - never re-join via a stale template.
+        if (!channel_id) return null;
+
+        const template = this.last_committed_voice_state;
+        const channel = findByProps("getChannel", "getDMFromUserId")?.getChannel?.(channel_id);
+        const media_engine = MediaEngineStore as any;
+
+        return {
+            guild_id: channel?.guild_id ?? template?.guild_id ?? null,
+            channel_id,
+            self_mute: this.is_fd_enabled || (media_engine?.isMute?.() ?? false),
+            self_deaf: this.is_fd_enabled || (media_engine?.isDeaf?.() ?? false),
+            self_video: media_engine?.isVideoEnabled?.() ?? template?.self_video ?? false,
+            flags: template?.flags ?? 0
+        };
+    }
+
+    private get_voice_channel_id(): string | null {
+        return findByProps("getVoiceChannelId")?.getVoiceChannelId?.() ?? null;
+    }
+
+    private get_self_user_id(): string | null {
+        return findByProps("getCurrentUser")?.getCurrentUser?.()?.id ?? null;
     }
 
     private get_icon_svg(is_active: boolean) {
@@ -90,6 +230,15 @@ class FakeDeafen {
         return buttons.length > 0 ? buttons[0] : null;
     }
 
+    private schedule_button_mount() {
+        if (this.button_mount_pending) return;
+        this.button_mount_pending = true;
+        requestAnimationFrame(() => {
+            this.button_mount_pending = false;
+            this.mount_fd_button();
+        });
+    }
+
     private mount_fd_button() {
         if (document.getElementById("fd-btn")) return;
 
@@ -107,9 +256,8 @@ class FakeDeafen {
         };
 
         fd_btn.onclick = () => {
-            this.is_fd_enabled = !this.is_fd_enabled;
+            this.toggle_fd();
             update_view();
-            this.refresh_voice_state();
         };
 
         update_view();
