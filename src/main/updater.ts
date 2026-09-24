@@ -4,13 +4,16 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+
 import { app, BrowserWindow, ipcMain } from "electron";
 import { autoUpdater, UpdateInfo } from "electron-updater";
-import { join } from "path";
+import { dirname, join } from "path";
 import { IpcEvents, UpdaterIpcEvents } from "shared/IpcEvents";
 import { STATIC_DIR } from "shared/paths";
 import { Millis } from "shared/utils/millis";
 
+import { DATA_DIR } from "./constants";
 import { State } from "./settings";
 import { setSplashIndeterminate, updateSplashMessage, updateSplashProgress } from "./splash";
 import { handle } from "./utils/ipcWrappers";
@@ -34,14 +37,69 @@ autoUpdater.autoDownload = false;
 autoUpdater.autoInstallOnAppQuit = false;
 autoUpdater.fullChangelog = true;
 
-// one shared check per process: electron-updater refetches latest.yml on
-// every checkForUpdates call, and the boot check + settings flag used to
-// race two network fetches on every launch
-const updateCheckPromise = autoUpdater.checkForUpdates();
+/**
+ * One lazy check per process (boot splash and settings flag share it), plus
+ * a disk stamp shared by all profiles: sibling instances started within
+ * CHECK_CACHE_TTL of a confirmed-current check skip the network fetch — a
+ * multi-profile boot costs one latest.yml handshake instead of one per
+ * process. Only "no update available" outcomes are stamped; while an update
+ * exists every instance must still fetch so it can download it. Worst case
+ * the stamp delays update pickup by its TTL.
+ */
+const CHECK_CACHE_FILE = join(DATA_DIR, "cache", "update-check.json");
+const CHECK_CACHE_TTL = 10 * Millis.MINUTE;
 
-const isOutdated = updateCheckPromise.then(res => Boolean(res?.isUpdateAvailable)).catch(() => false);
+type UpdateCheckResult = Awaited<ReturnType<typeof autoUpdater.checkForUpdates>>;
 
-handle(IpcEvents.UPDATER_IS_OUTDATED, () => isOutdated);
+function readCheckCache(): string | null {
+    try {
+        const stamp = JSON.parse(readFileSync(CHECK_CACHE_FILE, "utf8")) as {
+            checkedAt: number;
+            latestVersion: string;
+        };
+        if (!stamp?.checkedAt || !stamp.latestVersion) return null;
+        if (Date.now() - stamp.checkedAt > CHECK_CACHE_TTL) return null;
+        return stamp.latestVersion;
+    } catch {
+        return null;
+    }
+}
+
+let updateCheckPromise: Promise<UpdateCheckResult | null> | null = null;
+
+function startUpdateCheck(): Promise<UpdateCheckResult | null> {
+    // a sibling instance confirmed we're current recently — no fetch needed
+    if (readCheckCache() === app.getVersion()) return Promise.resolve(null);
+
+    updateCheckPromise ??= autoUpdater
+        .checkForUpdates()
+        .then(res => {
+            if (res && !res.isUpdateAvailable) {
+                try {
+                    mkdirSync(dirname(CHECK_CACHE_FILE), { recursive: true });
+                    writeFileSync(
+                        CHECK_CACHE_FILE,
+                        JSON.stringify({ checkedAt: Date.now(), latestVersion: app.getVersion() })
+                    );
+                } catch {
+                    // a missing stamp just means the next instance refetches
+                }
+            }
+            return res;
+        })
+        .catch(e => {
+            // a failed check must not poison later ones in this process
+            updateCheckPromise = null;
+            throw e;
+        });
+    return updateCheckPromise;
+}
+
+handle(IpcEvents.UPDATER_IS_OUTDATED, () =>
+    startUpdateCheck()
+        .then(res => Boolean(res?.isUpdateAvailable))
+        .catch(() => false)
+);
 handle(IpcEvents.UPDATER_OPEN, async () => {
     const res = await autoUpdater.checkForUpdates();
     if (res?.isUpdateAvailable && res.updateInfo) openUpdater(res.updateInfo);
@@ -56,8 +114,8 @@ export function startBootUpdateCheck() {
     setSplashIndeterminate(true);
     updateSplashMessage("Checking for updates...");
 
-    // reuses the in-flight module-level check rather than refetching
-    updateCheckPromise
+    // shares the in-flight process check (or skips it via the cross-profile stamp)
+    startUpdateCheck()
         .then(res => {
             if (!res?.isUpdateAvailable) {
                 setSplashIndeterminate(false);

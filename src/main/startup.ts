@@ -38,6 +38,13 @@ function init() {
     // first lookup of the app host is pure added latency
     lookup("discord.com", () => {});
 
+    // Chromium background services Discord never uses: component updates,
+    // cert-revocation fetches, variations config, error-report uploads and
+    // hyperlink-audit pings are pure idle traffic
+    app.commandLine.appendSwitch("disable-background-networking");
+    app.commandLine.appendSwitch("disable-domain-reliability");
+    app.commandLine.appendSwitch("no-pings");
+
     const { disableSmoothScroll, hardwareAcceleration, hardwareVideoAcceleration } = Settings.store;
     const { launchArguments } = State.store;
 

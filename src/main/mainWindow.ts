@@ -39,6 +39,7 @@ import { destroyTray, initTray } from "./tray";
 import { clearData } from "./utils/clearData";
 import { makeLinksOpenExternally } from "./utils/makeLinksOpenExternally";
 import { applyDeckKeyboardFix, askToApplySteamLayout, isDeckGameMode } from "./utils/steamOS";
+import { blockDiscordTelemetry } from "./utils/telemetryBlock";
 import { downloadVencordAsar, ensureVencordFiles } from "./utils/vencordLoader";
 import { VENCORD_DIR } from "./vencordDir";
 
@@ -497,6 +498,8 @@ function retryUrl(url: string, description: string) {
 
 export async function createWindows() {
     const startMinimized = CommandLine.values["start-minimized"];
+
+    blockDiscordTelemetry();
 
     let splash: BrowserWindow | undefined;
     if (Settings.store.enableSplashScreen !== false) {
