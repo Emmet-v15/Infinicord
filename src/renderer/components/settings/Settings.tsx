@@ -12,6 +12,8 @@ import { ComponentType } from "react";
 import { Settings, useSettings } from "renderer/settings";
 import { isMac, isWindows } from "renderer/utils";
 
+declare const VesktopNative: typeof import("preload/VesktopNative").VesktopNative;
+
 import { ArRPCSettingsButton } from "./ArRPCSettings";
 import { AutoStartToggle } from "./AutoStartToggle";
 import { DeveloperOptionsButton } from "./DeveloperOptions";
@@ -201,11 +203,17 @@ function SettingsSections() {
 
 export default ErrorBoundary.wrap(
     function SettingsUI() {
+        const gitHash = VesktopNative.app.getGitHash();
+
         return (
             <section>
                 <Updater />
                 <OutdatedVesktopWarning />
                 <SettingsSections />
+                <BaseText size="xs" tag="p" className={cl("version-footer")}>
+                    Infinicord v{VesktopNative.app.getVersion()}
+                    {gitHash ? ` (${gitHash.slice(0, 7)})` : ""}
+                </BaseText>
             </section>
         );
     },
